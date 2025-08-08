@@ -12,7 +12,12 @@ import Suppliers from "./pages/Suppliers";
 import Items from "./pages/Items";
 import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
+import CustomerPayments from "./pages/CustomerPayments";
+import SupplierPayments from "./pages/SupplierPayments";
+import PurchaseOrders from "./pages/PurchaseOrders";
 import JournalEntries from "./pages/JournalEntries";
+import Ledger from "./pages/Ledger";
+import TrialBalance from "./pages/TrialBalance";
 import Reports from "./pages/Reports";
 import { AccountingProvider } from "@/state/accounting";
 
@@ -34,7 +39,12 @@ const App = () => (
             <Route path="/items" element={<Items />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/payments" element={<Payments />} />
+            <Route path="/customer-payments" element={<CustomerPayments />} />
+            <Route path="/supplier-payments" element={<SupplierPayments />} />
+            <Route path="/purchase-orders" element={<PurchaseOrders />} />
             <Route path="/journals" element={<JournalEntries />} />
+            <Route path="/ledger" element={<Ledger />} />
+            <Route path="/trial-balance" element={<TrialBalance />} />
             <Route path="/reports" element={<Reports />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
