@@ -8,152 +8,144 @@ All colors MUST be HSL for consistency and theming.
 
 @layer base {
   :root {
-    /* Modern gradient backgrounds */
-    --background: 240 10% 98%;
-    --background-secondary: 240 6% 96%;
-    --foreground: 240 10% 8%;
+    /* Modern vibrant backgrounds */
+    --background: 250 20% 99%;
+    --background-secondary: 248 25% 97%;
+    --foreground: 240 15% 9%;
 
-    /* Enhanced card system */
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 8%;
-    --card-hover: 240 6% 98%;
+    /* Enhanced card system with subtle tints */
+    --card: 255 40% 99%;
+    --card-foreground: 240 15% 9%;
+    --card-hover: 250 30% 98%;
 
-    /* Popover improvements */
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 8%;
+    /* Refined popover */
+    --popover: 255 40% 99%;
+    --popover-foreground: 240 15% 9%;
 
-    /* Modern primary palette - Professional blue */
-    --primary: 213 94% 68%;
+    /* Vibrant primary - Ocean Blue */
+    --primary: 200 100% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 213 94% 62%;
-    --primary-light: 213 94% 88%;
+    --primary-hover: 200 100% 48%;
+    --primary-light: 200 100% 90%;
 
-    /* Warm secondary palette */
-    --secondary: 240 6% 94%;
-    --secondary-foreground: 240 10% 8%;
-    --secondary-hover: 240 6% 90%;
+    /* Warm secondary - Lavender */
+    --secondary: 260 30% 92%;
+    --secondary-foreground: 240 15% 12%;
+    --secondary-hover: 260 30% 88%;
 
-    /* Refined muted colors */
-    --muted: 240 6% 94%;
-    --muted-foreground: 240 5% 55%;
+    /* Sophisticated muted colors */
+    --muted: 250 20% 95%;
+    --muted-foreground: 240 8% 52%;
 
-    /* Accent improvements */
-    --accent: 270 95% 75%;
+    /* Vibrant accent - Purple */
+    --accent: 280 100% 70%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 270 95% 92%;
+    --accent-light: 280 100% 95%;
 
-    /* Modern destructive */
-    --destructive: 0 84% 60%;
+    /* Modern status colors */
+    --destructive: 350 89% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success color for positive actions */
-    --success: 142 76% 36%;
+    --success: 145 85% 47%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 76% 92%;
+    --success-light: 145 85% 94%;
 
-    /* Warning color */
-    --warning: 38 92% 50%;
+    --warning: 35 100% 55%;
     --warning-foreground: 0 0% 100%;
-    --warning-light: 38 92% 92%;
+    --warning-light: 35 100% 95%;
 
-    /* Subtle borders and inputs */
-    --border: 240 6% 88%;
-    --input: 240 6% 94%;
-    --ring: 213 94% 68%;
+    /* Subtle borders and inputs with color hints */
+    --border: 240 15% 88%;
+    --input: 250 20% 96%;
+    --ring: 200 100% 55%;
 
     /* Increased radius for modern look */
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Gradients for modern appeal */
-    --gradient-primary: linear-gradient(135deg, hsl(213 94% 68%), hsl(270 95% 75%));
-    --gradient-secondary: linear-gradient(135deg, hsl(240 6% 96%), hsl(240 6% 92%));
-    --gradient-hero: linear-gradient(135deg, hsl(213 94% 68% / 0.1), hsl(270 95% 75% / 0.05));
+    /* Colorful gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(200 100% 55%), hsl(280 100% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(250 20% 97%), hsl(260 30% 92%));
+    --gradient-hero: linear-gradient(135deg, hsl(200 100% 55% / 0.08), hsl(280 100% 70% / 0.04));
+    --gradient-success: linear-gradient(135deg, hsl(145 85% 47%), hsl(160 85% 50%));
+    --gradient-warning: linear-gradient(135deg, hsl(35 100% 55%), hsl(45 100% 55%));
 
-    /* Modern shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(240 10% 8% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(240 10% 8% / 0.1), 0 2px 4px -2px hsl(240 10% 8% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(240 10% 8% / 0.1), 0 4px 6px -4px hsl(240 10% 8% / 0.1);
-    --shadow-colored: 0 10px 25px -5px hsl(213 94% 68% / 0.25);
+    /* Enhanced shadows with color */
+    --shadow-sm: 0 1px 3px 0 hsl(240 15% 9% / 0.08);
+    --shadow-md: 0 4px 12px -2px hsl(240 15% 9% / 0.12), 0 2px 6px -2px hsl(240 15% 9% / 0.08);
+    --shadow-lg: 0 12px 24px -4px hsl(240 15% 9% / 0.15), 0 4px 8px -4px hsl(240 15% 9% / 0.1);
+    --shadow-colored: 0 12px 32px -8px hsl(200 100% 55% / 0.35);
+    --shadow-purple: 0 12px 32px -8px hsl(280 100% 70% / 0.25);
 
     /* Smooth transitions */
-    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-colors: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
-
+    --transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-colors: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
 
   .dark {
-    /* Dark mode with modern touch */
-    --background: 240 10% 4%;
-    --background-secondary: 240 8% 6%;
-    --foreground: 240 5% 96%;
+    /* Dark mode with vibrant accents */
+    --background: 245 25% 6%;
+    --background-secondary: 245 20% 8%;
+    --foreground: 250 15% 96%;
 
     /* Enhanced dark cards */
-    --card: 240 8% 8%;
-    --card-foreground: 240 5% 96%;
-    --card-hover: 240 8% 10%;
+    --card: 245 20% 9%;
+    --card-foreground: 250 15% 96%;
+    --card-hover: 245 20% 11%;
 
     /* Dark popover */
-    --popover: 240 8% 8%;
-    --popover-foreground: 240 5% 96%;
+    --popover: 245 20% 9%;
+    --popover-foreground: 250 15% 96%;
 
-    /* Modern dark primary */
-    --primary: 213 94% 75%;
-    --primary-foreground: 240 10% 4%;
-    --primary-hover: 213 94% 68%;
-    --primary-light: 213 94% 25%;
+    /* Bright primary for dark mode */
+    --primary: 200 100% 65%;
+    --primary-foreground: 245 25% 6%;
+    --primary-hover: 200 100% 58%;
+    --primary-light: 200 100% 25%;
 
-    /* Dark secondary */
-    --secondary: 240 8% 12%;
-    --secondary-foreground: 240 5% 96%;
-    --secondary-hover: 240 8% 16%;
+    /* Dark secondary with purple hint */
+    --secondary: 260 15% 15%;
+    --secondary-foreground: 250 15% 96%;
+    --secondary-hover: 260 15% 18%;
 
     /* Dark muted */
-    --muted: 240 8% 12%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 245 15% 13%;
+    --muted-foreground: 250 8% 70%;
 
-    /* Dark accent */
-    --accent: 270 95% 80%;
-    --accent-foreground: 240 10% 4%;
-    --accent-light: 270 95% 20%;
+    /* Bright accent for dark mode */
+    --accent: 280 100% 80%;
+    --accent-foreground: 245 25% 6%;
+    --accent-light: 280 100% 20%;
 
-    /* Dark destructive */
-    --destructive: 0 84% 65%;
+    /* Dark status colors */
+    --destructive: 350 89% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Dark success */
-    --success: 142 76% 45%;
+    --success: 145 85% 55%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 76% 15%;
+    --success-light: 145 85% 18%;
 
-    /* Dark warning */
-    --warning: 38 92% 60%;
-    --warning-foreground: 240 10% 4%;
-    --warning-light: 38 92% 15%;
+    --warning: 35 100% 65%;
+    --warning-foreground: 245 25% 6%;
+    --warning-light: 35 100% 18%;
 
     /* Dark borders and inputs */
-    --border: 240 8% 16%;
-    --input: 240 8% 12%;
-    --ring: 213 94% 75%;
+    --border: 245 15% 18%;
+    --input: 245 15% 13%;
+    --ring: 200 100% 65%;
 
     /* Dark gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(213 94% 75%), hsl(270 95% 80%));
-    --gradient-secondary: linear-gradient(135deg, hsl(240 8% 8%), hsl(240 8% 12%));
-    --gradient-hero: linear-gradient(135deg, hsl(213 94% 75% / 0.1), hsl(270 95% 80% / 0.05));
+    --gradient-primary: linear-gradient(135deg, hsl(200 100% 65%), hsl(280 100% 80%));
+    --gradient-secondary: linear-gradient(135deg, hsl(245 20% 9%), hsl(260 15% 15%));
+    --gradient-hero: linear-gradient(135deg, hsl(200 100% 65% / 0.12), hsl(280 100% 80% / 0.08));
+    --gradient-success: linear-gradient(135deg, hsl(145 85% 55%), hsl(160 85% 58%));
+    --gradient-warning: linear-gradient(135deg, hsl(35 100% 65%), hsl(45 100% 65%));
 
-    /* Dark shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.2), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
-    --shadow-colored: 0 10px 25px -5px hsl(213 94% 75% / 0.3);
-
-    --sidebar-background: 240 8% 6%;
-    --sidebar-foreground: 240 5% 90%;
-    --sidebar-primary: 213 94% 75%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 8% 12%;
-    --sidebar-accent-foreground: 240 5% 90%;
-    --sidebar-border: 240 8% 16%;
-    --sidebar-ring: 213 94% 75%;
+    /* Enhanced dark shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.15);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.25), 0 2px 6px -2px hsl(0 0% 0% / 0.15);
+    --shadow-lg: 0 12px 24px -4px hsl(0 0% 0% / 0.35), 0 4px 8px -4px hsl(0 0% 0% / 0.2);
+    --shadow-colored: 0 12px 32px -8px hsl(200 100% 65% / 0.4);
+    --shadow-purple: 0 12px 32px -8px hsl(280 100% 80% / 0.3);
   }
 }
 
@@ -163,59 +155,88 @@ All colors MUST be HSL for consistency and theming.
   }
 
   body {
-    @apply bg-gradient-to-br from-background to-background-secondary text-foreground antialiased;
+    @apply bg-gradient-to-br from-background via-background-secondary to-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-attachment: fixed;
   }
 
-  /* Modern scrollbar styling */
+  /* Modern colorful scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
     background: hsl(var(--muted));
+    border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
+    border-radius: 10px;
+    border: 1px solid hsl(var(--background));
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: linear-gradient(180deg, hsl(var(--primary-hover)), hsl(var(--accent)));
   }
 }
 
 @layer components {
-  /* Modern card component variations */
+  /* Enhanced card variations */
   .card-modern {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300;
+    @apply bg-card/90 backdrop-blur-md border border-border/40 rounded-2xl shadow-lg hover:shadow-colored transition-all duration-300 hover:scale-[1.02];
   }
 
   .card-gradient {
-    @apply bg-gradient-to-br from-card to-card-hover border border-border/30 rounded-xl shadow-lg;
+    @apply bg-gradient-to-br from-card via-card-hover to-background border border-border/20 rounded-2xl shadow-lg hover:shadow-purple;
   }
 
-  /* Modern button enhancements */
+  .card-feature {
+    @apply bg-gradient-to-br from-primary-light/10 via-accent-light/5 to-transparent border border-primary/20 rounded-2xl shadow-md hover:shadow-colored hover:border-primary/40;
+  }
+
+  /* Enhanced button variations */
   .btn-gradient {
     background: var(--gradient-primary);
-    @apply text-primary-foreground font-medium rounded-lg transition-all duration-300 hover:shadow-colored hover:-translate-y-0.5;
+    @apply text-white font-semibold rounded-xl shadow-md transition-all duration-300 hover:shadow-colored hover:-translate-y-1 hover:scale-105;
   }
 
-  /* Navigation enhancements */
+  .btn-success {
+    background: var(--gradient-success);
+    @apply text-white font-medium rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300;
+  }
+
+  .btn-glass {
+    @apply bg-background/20 backdrop-blur-md border border-border/30 text-foreground hover:bg-background/30 hover:border-border/50 rounded-xl transition-all duration-300;
+  }
+
+  /* Enhanced navigation */
   .nav-modern {
-    @apply relative px-4 py-2 rounded-lg transition-all duration-200 hover:bg-secondary/80 hover:shadow-sm;
+    @apply relative px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-secondary/80 hover:shadow-sm hover:-translate-y-0.5;
   }
 
   .nav-modern.active {
-    @apply bg-primary/10 text-primary font-medium shadow-sm;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.05));
+    @apply bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 text-primary font-semibold shadow-md border border-primary/30;
+    backdrop-filter: blur(8px);
   }
 
-  /* Modern form styling */
+  .nav-modern::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 transition-opacity duration-300;
+  }
+
+  .nav-modern:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Enhanced form styling */
   .form-modern {
-    @apply space-y-6 p-6 bg-card/50 backdrop-blur-sm rounded-xl border border-border/30;
+    @apply space-y-6 p-8 bg-gradient-to-br from-card/60 via-card-hover/40 to-card/60 backdrop-blur-lg rounded-2xl border border-border/40 shadow-lg;
+  }
+
+  .input-modern {
+    @apply bg-background/50 border-border/60 rounded-xl focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300;
   }
 
   /* Animation utilities */
