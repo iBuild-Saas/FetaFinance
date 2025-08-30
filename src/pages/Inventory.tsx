@@ -31,6 +31,7 @@ interface StockMovement {
   item_id: string;
   company_id: string;
   movement_type: string;
+  movement_source: string;
   quantity: number;
   unit_cost: number;
   total_cost: number;
@@ -38,9 +39,8 @@ interface StockMovement {
   reference_id: string;
   reference_number: string;
   movement_date: string;
-  notes?: string | null;
+  description?: string | null;
   created_at: string;
-  updated_at: string;
   items?: {
     item_code: string;
     name: string;
@@ -82,14 +82,7 @@ const Inventory = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('stock_items')
-        .select(`
-          *,
-          items:item_id (
-            item_code,
-            name,
-            unit_of_measure
-          )
-        `)
+        .select('*')
         .eq('company_id', activeCompany.id);
 
       if (error) {
@@ -97,7 +90,7 @@ const Inventory = () => {
         if (error.code === '42P01') {
           toast({
             title: "Database Setup Required",
-            description: "The stock_items table doesn't exist. Please run the inventory setup scripts first.",
+            description: "The stock_items table doesn't exist. Please check your database setup.",
             variant: "destructive",
           });
         } else {
@@ -109,12 +102,12 @@ const Inventory = () => {
       // Transform the data to match the StockItem interface
       const transformedData = (data || []).map(item => ({
         item_id: item.item_id,
-        item_code: item.items?.item_code || item.item_id,
-        item_name: item.items?.name || 'Unknown Item',
-        current_quantity: item.quantity_on_hand || 0,
+        item_code: item.item_id, // Use item_id as code for now
+        item_name: 'Item ' + item.item_id, // Generic name for now
+        current_quantity: item.current_quantity || 0,
         available_quantity: item.available_quantity || 0,
         average_cost: item.average_cost || 0,
-        total_value: (item.quantity_on_hand || 0) * (item.average_cost || 0),
+        total_value: (item.current_quantity || 0) * (item.average_cost || 0),
         reorder_level: 10 // Default reorder level
       }));
       
@@ -138,13 +131,7 @@ const Inventory = () => {
     try {
       const { data, error } = await supabase
         .from('stock_movements')
-        .select(`
-          *,
-          items:item_id (
-            item_code,
-            name
-          )
-        `)
+        .select('*')
         .eq('company_id', activeCompany.id)
         .order('movement_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -155,7 +142,7 @@ const Inventory = () => {
         if (error.code === '42P01') {
           toast({
             title: "Database Setup Required",
-            description: "Please run the CREATE_INVENTORY_SYSTEM.sql script first.",
+            description: "Please run COMPLETE_STOCK_SYSTEM_WITH_TRIGGERS.sql first.",
             variant: "destructive",
           });
         } else {
@@ -373,8 +360,8 @@ const Inventory = () => {
                           <TableCell>{new Date(movement.movement_date).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-mono text-sm">{movement.items?.item_code || movement.item_id}</div>
-                              <div className="text-sm text-muted-foreground">{movement.items?.name || 'Unknown Item'}</div>
+                              <div className="font-mono text-sm">{movement.item_id}</div>
+                              <div className="text-sm text-muted-foreground">Item {movement.item_id}</div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -390,7 +377,7 @@ const Inventory = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{movement.reference_type}</Badge>
+                            <Badge variant="outline">{movement.movement_source}</Badge>
                           </TableCell>
                           <TableCell className="text-right">{movement.quantity.toFixed(3)}</TableCell>
                           <TableCell className="text-right">${movement.unit_cost.toFixed(4)}</TableCell>
