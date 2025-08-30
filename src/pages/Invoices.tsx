@@ -31,6 +31,7 @@ interface InvoiceFormData {
   invoice_date: string;
   due_date: string;
   status: string;
+  delivery_status?: string;
   payment_terms: string;
   notes: string;
   terms_and_conditions: string;
@@ -73,6 +74,7 @@ const Invoices = () => {
     invoice_date: new Date().toISOString().slice(0, 10),
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     status: "SUBMITTED", // Use 'SUBMITTED' for simplified status system
+    delivery_status: "PENDING",
     payment_terms: "NET_30",
     notes: "",
     terms_and_conditions: "",
@@ -109,7 +111,7 @@ const Invoices = () => {
         .select(`
           *,
           customers!inner(name, customer_code, email),
-          invoice_line_items(*)
+          sales_invoice_line_items(*)
         `)
         .eq('company_id', activeCompany.id)
         .eq('is_active', true)
@@ -473,10 +475,11 @@ const Invoices = () => {
         const invoiceData = {
           customer_id: formData.customer_id,
           company_id: activeCompany.id,
-          invoice_number: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Required field - more unique
+          invoice_number: `INV-${Date.now().toString().slice(-8)}`, // Required field - 12 chars total
           invoice_date: formData.invoice_date || new Date().toISOString().split('T')[0], // Required field
           due_date: formData.due_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Required field (30 days from now)
           status: formData.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT',
+          delivery_status: formData.delivery_status || 'PENDING',
           subtotal: subtotal || 0, // Required field
           tax_amount: totalTax || 0, // Required field
           discount_amount: (totalLineItemDiscount + wholeInvoiceDiscount) || 0, // Required field
@@ -489,6 +492,24 @@ const Invoices = () => {
         };
       
       console.log('Attempting to insert invoice with data:', invoiceData);
+      console.log('Active company:', activeCompany);
+      console.log('Form data:', formData);
+      
+      // Test table access first
+      const { data: testData, error: testError } = await supabase
+        .from('sales_invoices')
+        .select('id')
+        .limit(1);
+      
+      if (testError) {
+        console.error('Table access test failed:', testError);
+        toast({
+          title: "Database Error",
+          description: `Cannot access sales_invoices table: ${testError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
       
       const { data: invoice, error: invoiceError } = await supabase
         .from('sales_invoices')
@@ -505,6 +526,7 @@ const Invoices = () => {
           hint: invoiceError.hint
         });
         console.error('Invoice data that failed:', invoiceData);
+        console.error('Invoice data JSON:', JSON.stringify(invoiceData, null, 2));
         
         // Show more specific error message to user
         let errorMessage = 'Failed to create invoice';
@@ -533,7 +555,8 @@ const Invoices = () => {
 
       // Create line items - map to database fields correctly
       const lineItemsWithInvoiceId = lineItems.map(item => ({
-        invoice_id: invoice.id,
+        sales_invoice_id: invoice.id,
+        item_id: item.item_id || null, // Include item_id for stock movements
         item_name: item.item_name || 'Unknown Item',
         description: item.description || '',
         quantity: item.quantity || 1,
@@ -550,7 +573,7 @@ const Invoices = () => {
       console.log('Line items to insert:', lineItemsWithInvoiceId);
 
       const { error: lineItemsError } = await supabase
-        .from('invoice_line_items')
+        .from('sales_invoice_line_items')
         .insert(lineItemsWithInvoiceId);
 
       if (lineItemsError) {
@@ -624,21 +647,63 @@ const Invoices = () => {
       }
     } catch (err) {
       console.error('Status update error:', err);
-      let errorMessage = 'Unknown error occurred';
       
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === 'object' && err !== null) {
-        if ('message' in err) {
-          errorMessage = String(err.message);
-        } else if ('details' in err) {
-          errorMessage = String(err.details);
-        }
+      let errorMessage = 'Unknown error occurred';
+      if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = (err as any).message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
       }
       
       toast({
         title: "Error",
         description: `Failed to update invoice status: ${errorMessage}`,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update delivery status
+  const updateDeliveryStatus = async (invoiceId: string, newDeliveryStatus: string) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('sales_invoices')
+        .update({ delivery_status: newDeliveryStatus })
+        .eq('id', invoiceId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `Delivery status updated to ${newDeliveryStatus}. ${newDeliveryStatus === 'DELIVERED' ? 'Stock movements created.' : ''}`,
+      });
+
+      // Refresh the invoices list
+      fetchInvoices();
+      
+      // If we're in detail view, update the selected invoice
+      if (selectedInvoice && selectedInvoice.id === invoiceId) {
+        setSelectedInvoice({ ...selectedInvoice, delivery_status: newDeliveryStatus });
+      }
+    } catch (err) {
+      console.error('Delivery status update error:', err);
+      
+      let errorMessage = 'Unknown error occurred';
+      if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = (err as any).message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      toast({
+        title: "Error",
+        description: `Failed to update delivery status: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -1111,6 +1176,14 @@ const Invoices = () => {
                               variant="outline" 
                               size="sm" 
                               className="w-full justify-start"
+                              onClick={() => setFormData({...formData, delivery_status: 'DELIVERED'})}
+                            >
+                              Mark as Delivered
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full justify-start"
                               onClick={() => setFormData({...formData, due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)})}
                             >
                               Set Due Date +30 Days
@@ -1147,6 +1220,16 @@ const Invoices = () => {
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       Submit Invoice
+                    </Button>
+                  )}
+                  {/* Delivery Status Button - Only show for SUBMITTED invoices with PENDING delivery */}
+                  {selectedInvoice.status === 'SUBMITTED' && (selectedInvoice as any).delivery_status === 'PENDING' && (
+                    <Button
+                      variant="default"
+                      onClick={() => updateDeliveryStatus(selectedInvoice.id, 'DELIVERED')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Mark as Delivered
                     </Button>
                   )}
                   <Button variant="secondary" onClick={backToList}>Back to List</Button>

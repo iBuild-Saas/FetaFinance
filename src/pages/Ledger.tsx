@@ -121,7 +121,7 @@ const Ledger = () => {
         if (error.message.includes('function get_account_ledger')) {
           toast({
             title: "Database Setup Required",
-            description: "Please run the CREATE_GENERAL_LEDGER_VIEWS.sql script first.",
+            description: "Please run the FIX_ACCOUNT_LEDGER_FUNCTION.sql script first.",
             variant: "destructive",
           });
         } else {
@@ -150,17 +150,18 @@ const Ledger = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .rpc('get_trial_balance', {
-          p_company_id: activeCompany.id,
-          p_as_of_date: asOfDate
+        .rpc('get_company_trial_balance', {
+          company_uuid: activeCompany.id,
+          start_date: '2023-01-01',
+          end_date: asOfDate
         });
 
       if (error) {
         console.error('Error fetching trial balance:', error);
-        if (error.message.includes('function get_trial_balance')) {
+        if (error.message.includes('function get_company_trial_balance')) {
           toast({
             title: "Database Setup Required",
-            description: "Please run the CREATE_GENERAL_LEDGER_VIEWS.sql script first.",
+            description: "Please run the SIMPLE_TRIAL_BALANCE_QUERY.sql script first.",
             variant: "destructive",
           });
         } else {
@@ -445,7 +446,7 @@ const Ledger = () => {
                           </TableRow>
                         ) : (
                           ledgerEntries.map((entry) => (
-                            <TableRow key={entry.line_id} className="hover:bg-muted/50">
+                            <TableRow key={`${entry.entry_number}-${entry.line_number || Math.random()}`} className="hover:bg-muted/50">
                               <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                               <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
                               <TableCell className="text-sm">{entry.reference || '—'}</TableCell>
@@ -569,8 +570,8 @@ const Ledger = () => {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        ledgerEntries.map((entry) => (
-                          <TableRow key={entry.line_id} className="hover:bg-muted/50">
+                        ledgerEntries.map((entry, index) => (
+                          <TableRow key={`ledger-${entry.entry_number}-${index}`} className="hover:bg-muted/50">
                             <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                             <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
                             <TableCell className="text-sm">

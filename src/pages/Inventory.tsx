@@ -19,6 +19,7 @@ interface StockItem {
   item_id: string;
   item_code: string;
   item_name: string;
+  description?: string;
   current_quantity: number;
   available_quantity: number;
   average_cost: number;
@@ -41,6 +42,8 @@ interface StockMovement {
   movement_date: string;
   description?: string | null;
   created_at: string;
+  item_code?: string;
+  item_name?: string;
   items?: {
     item_code: string;
     name: string;
@@ -74,41 +77,79 @@ const Inventory = () => {
     }
   }, [activeCompany]);
 
-  // Fetch current stock levels
+  // Fetch current stock levels with item details
   const fetchStockLevels = async () => {
     if (!activeCompany?.id) return;
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First try to fetch stock items with join
+      let { data, error } = await supabase
         .from('stock_items')
-        .select('*')
+        .select(`
+          *,
+          items (
+            id,
+            item_code,
+            name,
+            description
+          )
+        `)
         .eq('company_id', activeCompany.id);
 
+      // If join fails, try without join and fetch items separately
       if (error) {
-        console.error('Error fetching stock levels:', error);
-        if (error.code === '42P01') {
-          toast({
-            title: "Database Setup Required",
-            description: "The stock_items table doesn't exist. Please check your database setup.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
+        console.log('Join failed, trying without join:', error);
+        const { data: stockData, error: stockError } = await supabase
+          .from('stock_items')
+          .select('*')
+          .eq('company_id', activeCompany.id);
+
+        if (stockError) {
+          console.error('Error fetching stock levels:', stockError);
+          if (stockError.code === '42P01') {
+            toast({
+              title: "Database Setup Required",
+              description: "The stock_items table doesn't exist. Please check your database setup.",
+              variant: "destructive",
+            });
+          } else {
+            throw stockError;
+          }
+          return;
         }
-        return;
+
+        // Fetch items separately if we have stock data
+        const itemIds = stockData?.map(item => item.item_id).filter(Boolean) || [];
+        let itemsData = [];
+        
+        if (itemIds.length > 0) {
+          const { data: items } = await supabase
+            .from('items')
+            .select('id, item_code, name, description')
+            .in('id', itemIds);
+          itemsData = items || [];
+        }
+
+        // Combine the data
+        data = stockData?.map(stockItem => ({
+          ...stockItem,
+          items: itemsData.find(item => item.id === stockItem.item_id) || null
+        })) || [];
       }
       
       // Transform the data to match the StockItem interface
       const transformedData = (data || []).map(item => ({
         item_id: item.item_id,
-        item_code: item.item_id, // Use item_id as code for now
-        item_name: 'Item ' + item.item_id, // Generic name for now
+        item_code: item.items?.item_code || `ITEM-${item.item_id}`,
+        item_name: item.items?.name || `Item ${item.item_id}`,
+        description: item.items?.description || '',
         current_quantity: item.current_quantity || 0,
         available_quantity: item.available_quantity || 0,
         average_cost: item.average_cost || 0,
         total_value: (item.current_quantity || 0) * (item.average_cost || 0),
-        reorder_level: 10 // Default reorder level
+        reorder_level: item.reorder_level || 0
       }));
       
       setStockItems(transformedData);
@@ -124,34 +165,79 @@ const Inventory = () => {
     }
   };
 
-  // Fetch stock movements history
+  // Fetch stock movements history with item details
   const fetchStockMovements = async () => {
     if (!activeCompany?.id) return;
     
     try {
-      const { data, error } = await supabase
+      // First try to fetch stock movements with join
+      let { data, error } = await supabase
         .from('stock_movements')
-        .select('*')
+        .select(`
+          *,
+          items (
+            id,
+            item_code,
+            name
+          )
+        `)
         .eq('company_id', activeCompany.id)
         .order('movement_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(100);
 
+      // If join fails, try without join and fetch items separately
       if (error) {
-        console.error('Error fetching stock movements:', error);
-        if (error.code === '42P01') {
-          toast({
-            title: "Database Setup Required",
-            description: "Please run COMPLETE_STOCK_SYSTEM_WITH_TRIGGERS.sql first.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
+        console.log('Movements join failed, trying without join:', error);
+        const { data: movementData, error: movementError } = await supabase
+          .from('stock_movements')
+          .select('*')
+          .eq('company_id', activeCompany.id)
+          .order('movement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (movementError) {
+          console.error('Error fetching stock movements:', movementError);
+          if (movementError.code === '42P01') {
+            toast({
+              title: "Database Setup Required",
+              description: "Please run COMPLETE_STOCK_SYSTEM_WITH_TRIGGERS.sql first.",
+              variant: "destructive",
+            });
+          } else {
+            throw movementError;
+          }
+          return;
         }
-        return;
+
+        // Fetch items separately if we have movement data
+        const itemIds = movementData?.map(movement => movement.item_id).filter(Boolean) || [];
+        let itemsData = [];
+        
+        if (itemIds.length > 0) {
+          const { data: items } = await supabase
+            .from('items')
+            .select('id, item_code, name')
+            .in('id', itemIds);
+          itemsData = items || [];
+        }
+
+        // Combine the data
+        data = movementData?.map(movement => ({
+          ...movement,
+          items: itemsData.find(item => item.id === movement.item_id) || null
+        })) || [];
       }
       
-      setStockMovements(data || []);
+      // Transform the data to include item details
+      const transformedData = (data || []).map(movement => ({
+        ...movement,
+        item_code: movement.items?.item_code || `ITEM-${movement.item_id}`,
+        item_name: movement.items?.name || `Item ${movement.item_id}`,
+      }));
+      
+      setStockMovements(transformedData);
     } catch (err) {
       console.error('Stock movements fetch error:', err);
       toast({
