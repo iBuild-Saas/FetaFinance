@@ -6,7 +6,28 @@ export type ID = string;
 export type ReportType = "Balance Sheet" | "Income Statement";
 export type AccountType = "Asset" | "Liability" | "Equity" | "Revenue" | "Expense";
 
-export interface Company { id: ID; name: string; }
+export interface Company { 
+  id: ID; 
+  name: string; 
+  logo?: string; // Base64 encoded logo or URL
+  description?: string;
+  industry?: string;
+  companySize?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+  currency?: string;
+  fiscalYearStart?: string;
+  taxId?: string;
+  multiCurrency?: boolean;
+  inventoryTracking?: boolean;
+  autoBackup?: boolean;
+  timezone?: string;
+}
 
 export interface Account {
   id: ID;
@@ -64,6 +85,7 @@ const initialState: AccountingState = {
 type Action =
   | { type: "SET_ACTIVE_COMPANY"; id?: ID }
   | { type: "ADD_COMPANY"; company: Company }
+  | { type: "UPDATE_COMPANY"; id: ID; updates: Partial<Company> }
   | { type: "DELETE_COMPANY"; id: ID }
   | { type: "UPSERT_ACCOUNT"; account: Account }
   | { type: "DELETE_ACCOUNT"; id: ID }
@@ -79,8 +101,126 @@ type Action =
 
 const STORAGE_KEY = "lovable_fms_v1";
 
+// Compress logo images to reduce storage size
+function compressLogo(logoDataUrl: string, maxWidth: number = 200, maxHeight: number = 200): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      
+      // Calculate new dimensions maintaining aspect ratio
+      let { width, height } = img;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+      resolve(compressedDataUrl);
+    };
+    img.src = logoDataUrl;
+  });
+}
+
+// Clean state before persistence to reduce size
+function prepareStateForStorage(state: AccountingState): AccountingState {
+  return {
+    ...state,
+    companies: state.companies.map(company => ({
+      ...company,
+      // Remove logo from storage to prevent quota issues
+      // Logo will be stored separately or not at all for now
+      logo: undefined
+    }))
+  };
+}
+
 function persist(state: AccountingState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    // Try to persist without logos first
+    const cleanState = prepareStateForStorage(state);
+    const serialized = JSON.stringify(cleanState);
+    
+    // Check if we're approaching quota limit
+    if (serialized.length > 4 * 1024 * 1024) { // 4MB warning
+      console.warn('State size is large, consider removing some data');
+    }
+    
+    localStorage.setItem(STORAGE_KEY, serialized);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      console.error('LocalStorage quota exceeded. Attempting to clear old data...');
+      
+      // Try to clear some old data and retry
+      try {
+        // Remove old companies and related data to free space
+        const cleanedState = {
+          ...state,
+          companies: state.companies.slice(-2), // Keep only last 2 companies
+          accounts: state.accounts.filter(acc => 
+            state.companies.slice(-2).some(c => c.id === acc.companyId)
+          ),
+          customers: state.customers.filter(cust => 
+            state.companies.slice(-2).some(c => c.id === cust.companyId)
+          ),
+          suppliers: state.suppliers.filter(supp => 
+            state.companies.slice(-2).some(c => c.id === supp.companyId)
+          ),
+          items: state.items.filter(item => 
+            state.companies.slice(-2).some(c => c.id === item.companyId)
+          ),
+          invoices: state.invoices.filter(inv => 
+            state.companies.slice(-2).some(c => c.id === inv.companyId)
+          ),
+          payments: state.payments.filter(pay => 
+            state.companies.slice(-2).some(c => c.id === pay.companyId)
+          ),
+          journals: state.journals.filter(jour => 
+            state.companies.slice(-2).some(c => c.id === jour.companyId)
+          )
+        };
+        
+        const cleanState = prepareStateForStorage(cleanedState);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
+        console.warn('Successfully cleared old data and saved state');
+      } catch (retryError) {
+        console.error('Failed to save state even after clearing data:', retryError);
+        // As a last resort, try to save just the essential data
+        try {
+          const minimalState = {
+            companies: state.companies.slice(-1).map(c => ({ id: c.id, name: c.name })),
+            accounts: [],
+            customers: [],
+            suppliers: [],
+            items: [],
+            invoices: [],
+            payments: [],
+            journals: [],
+            activeCompanyId: state.activeCompanyId
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(minimalState));
+          console.warn('Saved minimal state due to storage constraints');
+        } catch (finalError) {
+          console.error('Failed to save even minimal state:', finalError);
+        }
+      }
+    } else {
+      console.error('Error persisting state:', error);
+    }
+  }
 }
 
 function load(): AccountingState {
@@ -118,6 +258,12 @@ function reducer(state: AccountingState, action: Action): AccountingState {
       const accounts = [...state.accounts, ...seedAccounts(action.company.id)];
       const activeCompanyId = state.activeCompanyId ?? action.company.id;
       return { ...state, companies, accounts, activeCompanyId };
+    }
+    case "UPDATE_COMPANY": {
+      const companies = state.companies.map(c => 
+        c.id === action.id ? { ...c, ...action.updates } : c
+      );
+      return { ...state, companies };
     }
     case "DELETE_COMPANY": {
       const companies = state.companies.filter(c => c.id !== action.id);

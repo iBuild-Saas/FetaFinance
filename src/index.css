@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,144 +11,134 @@ All colors MUST be HSL for consistency and theming.
 
 @layer base {
   :root {
-    /* Modern vibrant backgrounds */
-    --background: 250 20% 99%;
-    --background-secondary: 248 25% 97%;
-    --foreground: 240 15% 9%;
+    /* Clean gray theme */
+    --background: 0 0% 100%;
+    --background-secondary: 0 0% 98%;
+    --foreground: 240 5% 10%;
 
-    /* Enhanced card system with subtle tints */
-    --card: 255 40% 99%;
-    --card-foreground: 240 15% 9%;
-    --card-hover: 250 30% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 5% 10%;
+    --card-hover: 0 0% 99%;
 
-    /* Refined popover */
-    --popover: 255 40% 99%;
-    --popover-foreground: 240 15% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 5% 10%;
 
-    /* Vibrant primary - Ocean Blue */
-    --primary: 200 100% 55%;
+    --primary: 0 0% 20%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 200 100% 48%;
-    --primary-light: 200 100% 90%;
+    --primary-hover: 0 0% 16%;
+    --primary-light: 0 0% 96%;
 
-    /* Warm secondary - Lavender */
-    --secondary: 260 30% 92%;
-    --secondary-foreground: 240 15% 12%;
-    --secondary-hover: 260 30% 88%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 240 5% 12%;
+    --secondary-hover: 0 0% 94%;
 
-    /* Sophisticated muted colors */
-    --muted: 250 20% 95%;
-    --muted-foreground: 240 8% 52%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 240 3.8% 46%;
 
-    /* Vibrant accent - Purple */
-    --accent: 280 100% 70%;
+    --accent: 0 0% 40%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 280 100% 95%;
+    --accent-light: 0 0% 94%;
 
-    /* Modern status colors */
-    --destructive: 350 89% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 85% 47%;
+    --success: 142 72% 29%;
     --success-foreground: 0 0% 100%;
-    --success-light: 145 85% 94%;
+    --success-light: 142 76% 95%;
 
-    --warning: 35 100% 55%;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --warning-light: 35 100% 95%;
+    --warning-light: 38 100% 95%;
 
-    /* Subtle borders and inputs with color hints */
-    --border: 240 15% 88%;
-    --input: 250 20% 96%;
-    --ring: 200 100% 55%;
+    --border: 240 6% 88%;
+    --input: 0 0% 98%;
+    --ring: 0 0% 20%;
 
-    /* Increased radius for modern look */
     --radius: 0.875rem;
 
-    /* Colorful gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(200 100% 55%), hsl(280 100% 70%));
-    --gradient-secondary: linear-gradient(135deg, hsl(250 20% 97%), hsl(260 30% 92%));
-    --gradient-hero: linear-gradient(135deg, hsl(200 100% 55% / 0.08), hsl(280 100% 70% / 0.04));
-    --gradient-success: linear-gradient(135deg, hsl(145 85% 47%), hsl(160 85% 50%));
-    --gradient-warning: linear-gradient(135deg, hsl(35 100% 55%), hsl(45 100% 55%));
+    /* Gray gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 20%), hsl(0 0% 40%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 96%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 20% / 0.06), hsl(0 0% 40% / 0.04));
+    --gradient-success: linear-gradient(135deg, hsl(142 72% 29%), hsl(142 65% 35%));
+    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(45 90% 50%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 96%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(0 0% 98% / 0.6));
 
-    /* Enhanced shadows with color */
-    --shadow-sm: 0 1px 3px 0 hsl(240 15% 9% / 0.08);
-    --shadow-md: 0 4px 12px -2px hsl(240 15% 9% / 0.12), 0 2px 6px -2px hsl(240 15% 9% / 0.08);
-    --shadow-lg: 0 12px 24px -4px hsl(240 15% 9% / 0.15), 0 4px 8px -4px hsl(240 15% 9% / 0.1);
-    --shadow-colored: 0 12px 32px -8px hsl(200 100% 55% / 0.35);
-    --shadow-purple: 0 12px 32px -8px hsl(280 100% 70% / 0.25);
+    /* Gray shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(240 5% 10% / 0.08);
+    --shadow-md: 0 4px 12px -2px hsl(240 5% 10% / 0.12), 0 2px 6px -2px hsl(240 5% 10% / 0.08);
+    --shadow-lg: 0 12px 24px -4px hsl(240 5% 10% / 0.15), 0 4px 8px -4px hsl(240 5% 10% / 0.1);
+    --shadow-colored: 0 12px 32px -8px hsl(240 5% 20% / 0.15);
+    --shadow-purple: 0 12px 32px -8px hsl(240 5% 20% / 0.15);
+    --shadow-success: 0 8px 24px -4px hsl(142 72% 29% / 0.25);
+    --shadow-warning: 0 8px 24px -4px hsl(38 92% 50% / 0.25);
+    --shadow-glass: 0 8px 32px -8px hsl(240 5% 20% / 0.15), 0 0 0 1px hsl(0 0% 100% / 0.05);
 
-    /* Smooth transitions */
     --transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-colors: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
 
   .dark {
-    /* Dark mode with vibrant accents */
-    --background: 245 25% 6%;
-    --background-secondary: 245 20% 8%;
-    --foreground: 250 15% 96%;
+    /* Gray dark mode */
+    --background: 240 10% 6%;
+    --background-secondary: 240 10% 8%;
+    --foreground: 0 0% 98%;
 
-    /* Enhanced dark cards */
-    --card: 245 20% 9%;
-    --card-foreground: 250 15% 96%;
-    --card-hover: 245 20% 11%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 98%;
+    --card-hover: 240 10% 10%;
 
-    /* Dark popover */
-    --popover: 245 20% 9%;
-    --popover-foreground: 250 15% 96%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Bright primary for dark mode */
-    --primary: 200 100% 65%;
-    --primary-foreground: 245 25% 6%;
-    --primary-hover: 200 100% 58%;
-    --primary-light: 200 100% 25%;
+    --primary: 0 0% 92%;
+    --primary-foreground: 240 10% 6%;
+    --primary-hover: 0 0% 96%;
+    --primary-light: 0 0% 20%;
 
-    /* Dark secondary with purple hint */
-    --secondary: 260 15% 15%;
-    --secondary-foreground: 250 15% 96%;
-    --secondary-hover: 260 15% 18%;
+    --secondary: 240 8% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 240 8% 18%;
 
-    /* Dark muted */
-    --muted: 245 15% 13%;
-    --muted-foreground: 250 8% 70%;
+    --muted: 240 10% 12%;
+    --muted-foreground: 0 0% 80%;
 
-    /* Bright accent for dark mode */
-    --accent: 280 100% 80%;
-    --accent-foreground: 245 25% 6%;
-    --accent-light: 280 100% 20%;
+    --accent: 0 0% 80%;
+    --accent-foreground: 240 10% 6%;
+    --accent-light: 0 0% 20%;
 
-    /* Dark status colors */
-    --destructive: 350 89% 65%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 85% 55%;
+    --success: 142 72% 40%;
     --success-foreground: 0 0% 100%;
-    --success-light: 145 85% 18%;
+    --success-light: 142 76% 18%;
 
-    --warning: 35 100% 65%;
-    --warning-foreground: 245 25% 6%;
-    --warning-light: 35 100% 18%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 240 10% 6%;
+    --warning-light: 38 100% 18%;
 
-    /* Dark borders and inputs */
-    --border: 245 15% 18%;
-    --input: 245 15% 13%;
-    --ring: 200 100% 65%;
+    --border: 240 8% 16%;
+    --input: 240 10% 12%;
+    --ring: 0 0% 92%;
 
-    /* Dark gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(200 100% 65%), hsl(280 100% 80%));
-    --gradient-secondary: linear-gradient(135deg, hsl(245 20% 9%), hsl(260 15% 15%));
-    --gradient-hero: linear-gradient(135deg, hsl(200 100% 65% / 0.12), hsl(280 100% 80% / 0.08));
-    --gradient-success: linear-gradient(135deg, hsl(145 85% 55%), hsl(160 85% 58%));
-    --gradient-warning: linear-gradient(135deg, hsl(35 100% 65%), hsl(45 100% 65%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 92%), hsl(0 0% 80%));
+    --gradient-secondary: linear-gradient(135deg, hsl(240 10% 8%), hsl(240 8% 14%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 92% / 0.12), hsl(0 0% 80% / 0.08));
+    --gradient-success: linear-gradient(135deg, hsl(142 72% 40%), hsl(142 65% 45%));
+    --gradient-warning: linear-gradient(135deg, hsl(38 92% 55%), hsl(45 90% 55%));
+    --gradient-card: linear-gradient(135deg, hsl(240 10% 8%), hsl(240 8% 10%));
+    --gradient-glass: linear-gradient(135deg, hsl(240 10% 8% / 0.8), hsl(240 8% 10% / 0.6));
 
-    /* Enhanced dark shadows */
     --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.15);
     --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.25), 0 2px 6px -2px hsl(0 0% 0% / 0.15);
     --shadow-lg: 0 12px 24px -4px hsl(0 0% 0% / 0.35), 0 4px 8px -4px hsl(0 0% 0% / 0.2);
-    --shadow-colored: 0 12px 32px -8px hsl(200 100% 65% / 0.4);
-    --shadow-purple: 0 12px 32px -8px hsl(280 100% 80% / 0.3);
+    --shadow-colored: 0 12px 32px -8px hsl(0 0% 100% / 0.08);
+    --shadow-purple: 0 12px 32px -8px hsl(0 0% 100% / 0.08);
+    --shadow-success: 0 8px 24px -4px hsl(142 72% 40% / 0.35);
+    --shadow-warning: 0 8px 24px -4px hsl(38 92% 55% / 0.35);
+    --shadow-glass: 0 8px 32px -8px hsl(0 0% 100% / 0.08), 0 0 0 1px hsl(0 0% 100% / 0.05);
   }
 }
 
@@ -158,6 +151,2869 @@ All colors MUST be HSL for consistency and theming.
     @apply bg-gradient-to-br from-background via-background-secondary to-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+  }
+
+  body.rtl {
+    font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+    direction: rtl;
+  }
+
+  body.ltr {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+  }
+
+  /* RTL-specific styles */
+  .rtl .sidebar-trigger {
+    transform: scaleX(-1);
+  }
+
+  .rtl .breadcrumb-separator {
+    transform: scaleX(-1);
+  }
+
+  .rtl .chevron-icon {
+    transform: scaleX(-1);
+  }
+
+  /* Ensure proper text alignment for RTL */
+  .rtl * {
+    text-align: start;
+  }
+
+  .rtl .text-left {
+    text-align: right;
+  }
+
+  .rtl .text-right {
+    text-align: left;
+  }
+
+  /* Fix for select dropdowns in RTL */
+  .rtl [data-radix-select-content] {
+    direction: rtl;
+  }
+
+  /* Enhanced RTL support for form components */
+  .rtl input,
+  .rtl textarea,
+  .rtl select {
+    text-align: right;
+    direction: rtl;
+  }
+
+  .rtl input::placeholder,
+  .rtl textarea::placeholder {
+    text-align: right;
+  }
+
+  /* RTL support for select components */
+  .rtl .SelectTrigger,
+  .rtl .SelectContent,
+  .rtl .SelectItem {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for dropdown menus */
+  .rtl [data-radix-dropdown-menu-content] {
+    direction: rtl;
+  }
+
+  /* RTL support for command components */
+  .rtl [cmdk-input-wrapper] {
+    direction: rtl;
+  }
+
+  .rtl [cmdk-input-wrapper] input {
+    text-align: right;
+  }
+
+  /* RTL support for form labels */
+  .rtl label {
+    text-align: right;
+  }
+
+  /* RTL support for table headers and cells */
+  .rtl th,
+  .rtl td {
+    text-align: right;
+  }
+
+  /* RTL support for dashboard cards */
+  .rtl .card-header h3,
+  .rtl .card-header h4,
+  .rtl .card-title {
+    text-align: right;
+  }
+
+  .rtl .card-content p {
+    text-align: right;
+  }
+
+  /* RTL support for buttons with icons */
+  .rtl .btn-icon {
+    flex-direction: row-reverse;
+  }
+
+  /* RTL support for navigation items */
+  .rtl nav a,
+  .rtl nav button {
+    text-align: right;
+  }
+
+  /* RTL support for breadcrumbs */
+  .rtl .breadcrumb-item {
+    text-align: right;
+  }
+
+  /* RTL support for modal headers */
+  .rtl .modal-header h2,
+  .rtl .modal-header h3 {
+    text-align: right;
+  }
+
+  /* RTL support for list items */
+  .rtl .list-item {
+    text-align: right;
+  }
+
+  /* RTL support for search inputs */
+  .rtl .search-input {
+    text-align: right;
+    direction: rtl;
+  }
+
+  /* RTL support for filter dropdowns */
+  .rtl .filter-dropdown {
+    direction: rtl;
+  }
+
+  /* RTL support for pagination */
+  .rtl .pagination {
+    direction: rtl;
+  }
+
+  /* RTL support for tooltips */
+  .rtl .tooltip {
+    text-align: right;
+  }
+
+  /* RTL support for alerts */
+  .rtl .alert {
+    text-align: right;
+  }
+
+  /* RTL support for notifications */
+  .rtl .notification {
+    text-align: right;
+  }
+
+  /* RTL support for form groups */
+  .rtl .form-group {
+    direction: rtl;
+  }
+
+  /* RTL support for form sections */
+  .rtl .form-section {
+    direction: rtl;
+  }
+
+  /* RTL support for form actions */
+  .rtl .form-actions {
+    direction: rtl;
+  }
+
+  /* RTL support for data tables */
+  .rtl .data-table {
+    direction: rtl;
+  }
+
+  .rtl .data-table th,
+  .rtl .data-table td {
+    text-align: right;
+  }
+
+  /* RTL support for status indicators */
+  .rtl .status-indicator {
+    text-align: center;
+  }
+
+  /* RTL support for progress bars */
+  .rtl .progress-bar {
+    direction: rtl;
+  }
+
+  /* RTL support for sliders */
+  .rtl .slider {
+    direction: rtl;
+  }
+
+  /* RTL support for toggle switches */
+  .rtl .toggle-switch {
+    direction: rtl;
+  }
+
+  /* RTL support for checkboxes and radio buttons */
+  .rtl .checkbox,
+  .rtl .radio {
+    direction: rtl;
+  }
+
+  /* RTL support for file uploads */
+  .rtl .file-upload {
+    direction: rtl;
+  }
+
+  /* RTL support for date pickers */
+  .rtl .date-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for time pickers */
+  .rtl .time-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for color pickers */
+  .rtl .color-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for rich text editors */
+  .rtl .rich-text-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for code editors */
+  .rtl .code-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for markdown editors */
+  .rtl .markdown-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for spreadsheet components */
+  .rtl .spreadsheet {
+    direction: rtl;
+  }
+
+  .rtl .spreadsheet th,
+  .rtl .spreadsheet td {
+    text-align: right;
+  }
+
+  /* RTL support for chart components */
+  .rtl .chart-container {
+    direction: rtl;
+  }
+
+  /* RTL support for calendar components */
+  .rtl .calendar {
+    direction: rtl;
+  }
+
+  /* RTL support for timeline components */
+  .rtl .timeline {
+    direction: rtl;
+  }
+
+  /* RTL support for tree components */
+  .rtl .tree {
+    direction: rtl;
+  }
+
+  /* RTL support for accordion components */
+  .rtl .accordion {
+    direction: rtl;
+  }
+
+  /* RTL support for tabs */
+  .rtl .tabs {
+    direction: rtl;
+  }
+
+  /* RTL support for stepper components */
+  .rtl .stepper {
+    direction: rtl;
+  }
+
+  /* RTL support for wizard components */
+  .rtl .wizard {
+    direction: rtl;
+  }
+
+  /* RTL support for carousel components */
+  .rtl .carousel {
+    direction: rtl;
+  }
+
+  /* RTL support for gallery components */
+  .rtl .gallery {
+    direction: rtl;
+  }
+
+  /* RTL support for map components */
+  .rtl .map-container {
+    direction: rtl;
+  }
+
+  /* RTL support for video players */
+  .rtl .video-player {
+    direction: rtl;
+  }
+
+  /* RTL support for audio players */
+  .rtl .audio-player {
+    direction: rtl;
+  }
+
+  /* RTL support for chat components */
+  .rtl .chat-container {
+    direction: rtl;
+  }
+
+  .rtl .chat-message {
+    text-align: right;
+  }
+
+  /* RTL support for comment systems */
+  .rtl .comment-system {
+    direction: rtl;
+  }
+
+  .rtl .comment {
+    text-align: right;
+  }
+
+  /* RTL support for rating components */
+  .rtl .rating {
+    direction: rtl;
+  }
+
+  /* RTL support for review components */
+  .rtl .review {
+    text-align: right;
+  }
+
+  /* RTL support for feedback forms */
+  .rtl .feedback-form {
+    direction: rtl;
+  }
+
+  /* RTL support for survey components */
+  .rtl .survey {
+    direction: rtl;
+  }
+
+  /* RTL support for quiz components */
+  .rtl .quiz {
+    direction: rtl;
+  }
+
+  /* RTL support for game components */
+  .rtl .game {
+    direction: rtl;
+  }
+
+  /* RTL support for social media components */
+  .rtl .social-media {
+    direction: rtl;
+  }
+
+  /* RTL support for e-commerce components */
+  .rtl .e-commerce {
+    direction: rtl;
+  }
+
+  /* RTL support for booking components */
+  .rtl .booking {
+    direction: rtl;
+  }
+
+  /* RTL support for reservation components */
+  .rtl .reservation {
+    direction: rtl;
+  }
+
+  /* RTL support for appointment components */
+  .rtl .appointment {
+    direction: rtl;
+  }
+
+  /* RTL support for scheduling components */
+  .rtl .scheduling {
+    direction: rtl;
+  }
+
+  /* RTL support for project management components */
+  .rtl .project-management {
+    direction: rtl;
+  }
+
+  /* RTL support for task management components */
+  .rtl .task-management {
+    direction: rtl;
+  }
+
+  /* RTL support for kanban boards */
+  .rtl .kanban-board {
+    direction: rtl;
+  }
+
+  /* RTL support for gantt charts */
+  .rtl .gantt-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for mind maps */
+  .rtl .mind-map {
+    direction: rtl;
+  }
+
+  /* RTL support for flowcharts */
+  .rtl .flowchart {
+    direction: rtl;
+  }
+
+  /* RTL support for diagrams */
+  .rtl .diagram {
+    direction: rtl;
+  }
+
+  /* RTL support for presentations */
+  .rtl .presentation {
+    direction: rtl;
+  }
+
+  /* RTL support for slides */
+  .rtl .slide {
+    direction: rtl;
+  }
+
+  /* RTL support for documents */
+  .rtl .document {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for reports */
+  .rtl .report {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for dashboards */
+  .rtl .dashboard {
+    direction: rtl;
+  }
+
+  /* RTL support for analytics */
+  .rtl .analytics {
+    direction: rtl;
+  }
+
+  /* RTL support for metrics */
+  .rtl .metrics {
+    direction: rtl;
+  }
+
+  /* RTL support for KPIs */
+  .rtl .kpi {
+    direction: rtl;
+  }
+
+  /* RTL support for scorecards */
+  .rtl .scorecard {
+    direction: rtl;
+  }
+
+  /* RTL support for heatmaps */
+  .rtl .heatmap {
+    direction: rtl;
+  }
+
+  /* RTL support for scatter plots */
+  .rtl .scatter-plot {
+    direction: rtl;
+  }
+
+  /* RTL support for bar charts */
+  .rtl .bar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for line charts */
+  .rtl .line-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for pie charts */
+  .rtl .pie-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for donut charts */
+  .rtl .donut-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for area charts */
+  .rtl .area-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for radar charts */
+  .rtl .radar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for polar charts */
+  .rtl .polar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for bubble charts */
+  .rtl .bubble-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for candlestick charts */
+  .rtl .candlestick-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for stock charts */
+  .rtl .stock-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for financial charts */
+  .rtl .financial-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for trading components */
+  .rtl .trading {
+    direction: rtl;
+  }
+
+  /* RTL support for portfolio components */
+  .rtl .portfolio {
+    direction: rtl;
+  }
+
+  /* RTL support for investment components */
+  .rtl .investment {
+    direction: rtl;
+  }
+
+  /* RTL support for banking components */
+  .rtl .banking {
+    direction: rtl;
+  }
+
+  /* RTL support for insurance components */
+  .rtl .insurance {
+    direction: rtl;
+  }
+
+  /* RTL support for real estate components */
+  .rtl .real-estate {
+    direction: rtl;
+  }
+
+  /* RTL support for healthcare components */
+  .rtl .healthcare {
+    direction: rtl;
+  }
+
+  /* RTL support for education components */
+  .rtl .education {
+    direction: rtl;
+  }
+
+  /* RTL support for government components */
+  .rtl .government {
+    direction: rtl;
+  }
+
+  /* RTL support for nonprofit components */
+  .rtl .nonprofit {
+    direction: rtl;
+  }
+
+  /* RTL support for religious components */
+  .rtl .religious {
+    direction: rtl;
+  }
+
+  /* RTL support for cultural components */
+  .rtl .cultural {
+    direction: rtl;
+  }
+
+  /* RTL support for entertainment components */
+  .rtl .entertainment {
+    direction: rtl;
+  }
+
+  /* RTL support for sports components */
+  .rtl .sports {
+    direction: rtl;
+  }
+
+  /* RTL support for travel components */
+  .rtl .travel {
+    direction: rtl;
+  }
+
+  /* RTL support for food components */
+  .rtl .food {
+    direction: rtl;
+  }
+
+  /* RTL support for fashion components */
+  .rtl .fashion {
+    direction: rtl;
+  }
+
+  /* RTL support for beauty components */
+  .rtl .beauty {
+    direction: rtl;
+  }
+
+  /* RTL support for fitness components */
+  .rtl .fitness {
+    direction: rtl;
+  }
+
+  /* RTL support for wellness components */
+  .rtl .wellness {
+    direction: rtl;
+  }
+
+  /* RTL support for medical components */
+  .rtl .medical {
+    direction: rtl;
+  }
+
+  /* RTL support for dental components */
+  .rtl .dental {
+    direction: rtl;
+  }
+
+  /* RTL support for veterinary components */
+  .rtl .veterinary {
+    direction: rtl;
+  }
+
+  /* RTL support for legal components */
+  .rtl .legal {
+    direction: rtl;
+  }
+
+  /* RTL support for accounting components */
+  .rtl .accounting {
+    direction: rtl;
+  }
+
+  /* RTL support for tax components */
+  .rtl .tax {
+    direction: rtl;
+  }
+
+  /* RTL support for audit components */
+  .rtl .audit {
+    direction: rtl;
+  }
+
+  /* RTL support for compliance components */
+  .rtl .compliance {
+    direction: rtl;
+  }
+
+  /* RTL support for risk management components */
+  .rtl .risk-management {
+    direction: rtl;
+  }
+
+  /* RTL support for governance components */
+  .rtl .governance {
+    direction: rtl;
+  }
+
+  /* RTL support for sustainability components */
+  .rtl .sustainability {
+    direction: rtl;
+  }
+
+  /* RTL support for environmental components */
+  .rtl .environmental {
+    direction: rtl;
+  }
+
+  /* RTL support for social responsibility components */
+  .rtl .social-responsibility {
+    direction: rtl;
+  }
+
+  /* RTL support for corporate social responsibility */
+  .rtl .csr {
+    direction: rtl;
+  }
+
+  /* RTL support for ESG components */
+  .rtl .esg {
+    direction: rtl;
+  }
+
+  /* RTL support for impact investing */
+  .rtl .impact-investing {
+    direction: rtl;
+  }
+
+  /* RTL support for microfinance */
+  .rtl .microfinance {
+    direction: rtl;
+  }
+
+  /* RTL support for crowdfunding */
+  .rtl .crowdfunding {
+    direction: rtl;
+  }
+
+  /* RTL support for peer-to-peer lending */
+  .rtl .p2p-lending {
+    direction: rtl;
+  }
+
+  /* RTL support for blockchain components */
+  .rtl .blockchain {
+    direction: rtl;
+  }
+
+  /* RTL support for cryptocurrency components */
+  .rtl .cryptocurrency {
+    direction: rtl;
+  }
+
+  /* RTL support for NFT components */
+  .rtl .nft {
+    direction: rtl;
+  }
+
+  /* RTL support for DeFi components */
+  .rtl .defi {
+    direction: rtl;
+  }
+
+  /* RTL support for Web3 components */
+  .rtl .web3 {
+    direction: rtl;
+  }
+
+  /* RTL support for metaverse components */
+  .rtl .metaverse {
+    direction: rtl;
+  }
+
+  /* RTL support for AI components */
+  .rtl .ai {
+    direction: rtl;
+  }
+
+  /* RTL support for machine learning components */
+  .rtl .machine-learning {
+    direction: rtl;
+  }
+
+  /* RTL support for deep learning components */
+  .rtl .deep-learning {
+    direction: rtl;
+  }
+
+  /* RTL support for natural language processing */
+  .rtl .nlp {
+    direction: rtl;
+  }
+
+  /* RTL support for computer vision components */
+  .rtl .computer-vision {
+    direction: rtl;
+  }
+
+  /* RTL support for robotics components */
+  .rtl .robotics {
+    direction: rtl;
+  }
+
+  /* RTL support for IoT components */
+  .rtl .iot {
+    direction: rtl;
+  }
+
+  /* RTL support for edge computing components */
+  .rtl .edge-computing {
+    direction: rtl;
+  }
+
+  /* RTL support for cloud computing components */
+  .rtl .cloud-computing {
+    direction: rtl;
+  }
+
+  /* RTL support for serverless components */
+  .rtl .serverless {
+    direction: rtl;
+  }
+
+  /* RTL support for containerization components */
+  .rtl .containerization {
+    direction: rtl;
+  }
+
+  /* RTL support for orchestration components */
+  .rtl .orchestration {
+    direction: rtl;
+  }
+
+  /* RTL support for DevOps components */
+  .rtl .devops {
+    direction: rtl;
+  }
+
+  /* RTL support for CI/CD components */
+  .rtl .ci-cd {
+    direction: rtl;
+  }
+
+  /* RTL support for monitoring components */
+  .rtl .monitoring {
+    direction: rtl;
+  }
+
+  /* RTL support for logging components */
+  .rtl .logging {
+    direction: rtl;
+  }
+
+  /* RTL support for tracing components */
+  .rtl .tracing {
+    direction: rtl;
+  }
+
+  /* RTL support for alerting components */
+  .rtl .alerting {
+    direction: rtl;
+  }
+
+  /* RTL support for incident management */
+  .rtl .incident-management {
+    direction: rtl;
+  }
+
+  /* RTL support for change management */
+  .rtl .change-management {
+    direction: rtl;
+  }
+
+  /* RTL support for release management */
+  .rtl .release-management {
+    direction: rtl;
+  }
+
+  /* RTL support for configuration management */
+  .rtl .configuration-management {
+    direction: rtl;
+  }
+
+  /* RTL support for asset management */
+  .rtl .asset-management {
+    direction: rtl;
+  }
+
+  /* RTL support for inventory management */
+  .rtl .inventory-management {
+    direction: rtl;
+  }
+
+  /* RTL support for supply chain management */
+  .rtl .supply-chain-management {
+    direction: rtl;
+  }
+
+  /* RTL support for logistics components */
+  .rtl .logistics {
+    direction: rtl;
+  }
+
+  /* RTL support for transportation components */
+  .rtl .transportation {
+    direction: rtl;
+  }
+
+  /* RTL support for warehousing components */
+  .rtl .warehousing {
+    direction: rtl;
+  }
+
+  /* RTL support for distribution components */
+  .rtl .distribution {
+    direction: rtl;
+  }
+
+  /* RTL support for procurement components */
+  .rtl .procurement {
+    direction: rtl;
+  }
+
+  /* RTL support for vendor management */
+  .rtl .vendor-management {
+    direction: rtl;
+  }
+
+  /* RTL support for contract management */
+  .rtl .contract-management {
+    direction: rtl;
+  }
+
+  /* RTL support for legal document management */
+  .rtl .legal-document-management {
+    direction: rtl;
+  }
+
+  /* RTL support for document management systems */
+  .rtl .document-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for content management systems */
+  .rtl .content-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for knowledge management */
+  .rtl .knowledge-management {
+    direction: rtl;
+  }
+
+  /* RTL support for learning management systems */
+  .rtl .learning-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for customer relationship management */
+  .rtl .crm {
+    direction: rtl;
+  }
+
+  /* RTL support for enterprise resource planning */
+  .rtl .erp {
+    direction: rtl;
+  }
+
+  /* RTL support for human resources management */
+  .rtl .hrm {
+    direction: rtl;
+  }
+
+  /* RTL support for payroll management */
+  .rtl .payroll-management {
+    direction: rtl;
+  }
+
+  /* RTL support for time and attendance */
+  .rtl .time-attendance {
+    direction: rtl;
+  }
+
+  /* RTL support for leave management */
+  .rtl .leave-management {
+    direction: rtl;
+  }
+
+  /* RTL support for performance management */
+  .rtl .performance-management {
+    direction: rtl;
+  }
+
+  /* RTL support for recruitment components */
+  .rtl .recruitment {
+    direction: rtl;
+  }
+
+  /* RTL support for onboarding components */
+  .rtl .onboarding {
+    direction: rtl;
+  }
+
+  /* RTL support for training components */
+  .rtl .training {
+    direction: rtl;
+  }
+
+  /* RTL support for development components */
+  .rtl .development {
+    direction: rtl;
+  }
+
+  /* RTL support for career planning */
+  .rtl .career-planning {
+    direction: rtl;
+  }
+
+  /* RTL support for succession planning */
+  .rtl .succession-planning {
+    direction: rtl;
+  }
+
+  /* RTL support for organizational development */
+  .rtl .organizational-development {
+    direction: rtl;
+  }
+
+  /* RTL support for change management */
+  .rtl .change-management {
+    direction: rtl;
+  }
+
+  /* RTL support for culture management */
+  .rtl .culture-management {
+    direction: rtl;
+  }
+
+  /* RTL support for diversity and inclusion */
+  .rtl .diversity-inclusion {
+    direction: rtl;
+  }
+
+  /* RTL support for employee engagement */
+  .rtl .employee-engagement {
+    direction: rtl;
+  }
+
+  /* RTL support for employee satisfaction */
+  .rtl .employee-satisfaction {
+    direction: rtl;
+  }
+
+  /* RTL support for employee retention */
+  .rtl .employee-retention {
+    direction: rtl;
+  }
+
+  /* RTL support for employee turnover */
+  .rtl .employee-turnover {
+    direction: rtl;
+  }
+
+  /* RTL support for employee productivity */
+  .rtl .employee-productivity {
+    direction: rtl;
+  }
+
+  /* RTL support for employee performance */
+  .rtl .employee-performance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee development */
+  .rtl .employee-development {
+    direction: rtl;
+  }
+
+  /* RTL support for employee training */
+  .rtl .employee-training {
+    direction: rtl;
+  }
+
+  /* RTL support for employee education */
+  .rtl .employee-education {
+    direction: rtl;
+  }
+
+  /* RTL support for employee certification */
+  .rtl .employee-certification {
+    direction: rtl;
+  }
+
+  /* RTL support for employee licensing */
+  .rtl .employee-licensing {
+    direction: rtl;
+  }
+
+  /* RTL support for employee compliance */
+  .rtl .employee-compliance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee safety */
+  .rtl .employee-safety {
+    direction: rtl;
+  }
+
+  /* RTL support for employee health */
+  .rtl .employee-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee wellness */
+  .rtl .employee-wellness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee benefits */
+  .rtl .employee-benefits {
+    direction: rtl;
+  }
+
+  /* RTL support for employee compensation */
+  .rtl .employee-compensation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee rewards */
+  .rtl .employee-rewards {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recognition */
+  .rtl .employee-recognition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee motivation */
+  .rtl .employee-motivation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee morale */
+  .rtl .employee-morale {
+    direction: rtl;
+  }
+
+  /* RTL support for employee satisfaction */
+  .rtl .employee-satisfaction {
+    direction: rtl;
+  }
+
+  /* RTL support for employee happiness */
+  .rtl .employee-happiness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee well-being */
+  .rtl .employee-well-being {
+    direction: rtl;
+  }
+
+  /* RTL support for employee quality of life */
+  .rtl .employee-quality-of-life {
+    direction: rtl;
+  }
+
+  /* RTL support for employee work-life balance */
+  .rtl .employee-work-life-balance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee stress management */
+  .rtl .employee-stress-management {
+    direction: rtl;
+  }
+
+  /* RTL support for employee mental health */
+  .rtl .employee-mental-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee physical health */
+  .rtl .employee-physical-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee nutrition */
+  .rtl .employee-nutrition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee fitness */
+  .rtl .employee-fitness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee exercise */
+  .rtl .employee-exercise {
+    direction: rtl;
+  }
+
+  /* RTL support for employee sports */
+  .rtl .employee-sports {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recreation */
+  .rtl .employee-recreation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee hobbies */
+  .rtl .employee-hobbies {
+    direction: rtl;
+  }
+
+  /* RTL support for employee interests */
+  .rtl .employee-interests {
+    direction: rtl;
+  }
+
+  /* RTL support for employee skills */
+  .rtl .employee-skills {
+    direction: rtl;
+  }
+
+  /* RTL support for employee competencies */
+  .rtl .employee-competencies {
+    direction: rtl;
+  }
+
+  /* RTL support for employee capabilities */
+  .rtl .employee-capabilities {
+    direction: rtl;
+  }
+
+  /* RTL support for employee strengths */
+  .rtl .employee-strengths {
+    direction: rtl;
+  }
+
+  /* RTL support for employee weaknesses */
+  .rtl .employee-weaknesses {
+    direction: rtl;
+  }
+
+  /* RTL support for employee opportunities */
+  .rtl .employee-opportunities {
+    direction: rtl;
+  }
+
+  /* RTL support for employee threats */
+  .rtl .employee-threats {
+    direction: rtl;
+  }
+
+  /* RTL support for employee goals */
+  .rtl .employee-goals {
+    direction: rtl;
+  }
+
+  /* RTL support for employee objectives */
+  .rtl .employee-objectives {
+    direction: rtl;
+  }
+
+  /* RTL support for employee targets */
+  .rtl .employee-targets {
+    direction: rtl;
+  }
+
+  /* RTL support for employee milestones */
+  .rtl .employee-milestones {
+    direction: rtl;
+  }
+
+  /* RTL support for employee achievements */
+  .rtl .employee-achievements {
+    direction: rtl;
+  }
+
+  /* RTL support for employee accomplishments */
+  .rtl .employee-accomplishments {
+    direction: rtl;
+  }
+
+  /* RTL support for employee contributions */
+  .rtl .employee-contributions {
+    direction: rtl;
+  }
+
+  /* RTL support for employee impact */
+  .rtl .employee-impact {
+    direction: rtl;
+  }
+
+  /* RTL support for employee value */
+  .rtl .employee-value {
+    direction: rtl;
+  }
+
+  /* RTL support for employee worth */
+  .rtl .employee-worth {
+    direction: rtl;
+  }
+
+  /* RTL support for employee ROI */
+  .rtl .employee-roi {
+    direction: rtl;
+  }
+
+  /* RTL support for employee cost */
+  .rtl .employee-cost {
+    direction: rtl;
+  }
+
+  /* RTL support for employee investment */
+  .rtl .employee-investment {
+    direction: rtl;
+  }
+
+  /* RTL support for employee return */
+  .rtl .employee-return {
+    direction: rtl;
+  }
+
+  /* RTL support for employee benefit */
+  .rtl .employee-benefit {
+    direction: rtl;
+  }
+
+  /* RTL support for employee advantage */
+  .rtl .employee-advantage {
+    direction: rtl;
+  }
+
+  /* RTL support for employee gain */
+  .rtl .employee-gain {
+    direction: rtl;
+  }
+
+  /* RTL support for employee profit */
+  .rtl .employee-profit {
+    direction: rtl;
+  }
+
+  /* RTL support for employee revenue */
+  .rtl .employee-revenue {
+    direction: rtl;
+  }
+
+  /* RTL support for employee income */
+  .rtl .employee-income {
+    direction: rtl;
+  }
+
+  /* RTL support for employee salary */
+  .rtl .employee-salary {
+    direction: rtl;
+  }
+
+  /* RTL support for employee wages */
+  .rtl .employee-wages {
+    direction: rtl;
+  }
+
+  /* RTL support for employee hourly rate */
+  .rtl .employee-hourly-rate {
+    direction: rtl;
+  }
+
+  /* RTL support for employee commission */
+  .rtl .employee-commission {
+    direction: rtl;
+  }
+
+  /* RTL support for employee bonus */
+  .rtl .employee-bonus {
+    direction: rtl;
+  }
+
+  /* RTL support for employee incentive */
+  .rtl .employee-incentive {
+    direction: rtl;
+  }
+
+  /* RTL support for employee reward */
+  .rtl .employee-reward {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recognition */
+  .rtl .employee-recognition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee appreciation */
+  .rtl .employee-appreciation {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Enhanced RTL support for form components */
+  .rtl input,
+  .rtl textarea,
+  .rtl select {
+    text-align: right;
+    direction: rtl;
+  }
+
+  .rtl input::placeholder,
+  .rtl textarea::placeholder {
+    text-align: right;
+  }
+
+  /* RTL support for select components */
+  .rtl .SelectTrigger,
+  .rtl .SelectContent,
+  .rtl .SelectItem {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for dropdown menus */
+  .rtl [data-radix-dropdown-menu-content] {
+    direction: rtl;
+  }
+
+  /* RTL support for command components */
+  .rtl [cmdk-input-wrapper] {
+    direction: rtl;
+  }
+
+  .rtl [cmdk-input-wrapper] input {
+    text-align: right;
+  }
+
+  /* RTL support for form labels */
+  .rtl label {
+    text-align: right;
+  }
+
+  /* RTL support for table headers and cells */
+  .rtl th,
+  .rtl td {
+    text-align: right;
+  }
+
+  /* RTL support for badges and chips */
+  .rtl .badge,
+  .rtl .chip {
+    text-align: center;
+  }
+
+  /* RTL support for buttons with icons */
+  .rtl .btn-icon {
+    flex-direction: row-reverse;
+  }
+
+  /* RTL support for navigation items */
+  .rtl nav a,
+  .rtl nav button {
+    text-align: right;
+  }
+
+  /* RTL support for breadcrumbs */
+  .rtl .breadcrumb-item {
+    text-align: right;
+  }
+
+  /* RTL support for modal headers */
+  .rtl .modal-header h2,
+  .rtl .modal-header h3 {
+    text-align: right;
+  }
+
+  /* RTL support for card headers */
+  .rtl .card-header h3,
+  .rtl .card-header h4 {
+    text-align: right;
+  }
+
+  /* RTL support for list items */
+  .rtl .list-item {
+    text-align: right;
+  }
+
+  /* RTL support for search inputs */
+  .rtl .search-input {
+    text-align: right;
+    direction: rtl;
+  }
+
+  /* RTL support for filter dropdowns */
+  .rtl .filter-dropdown {
+    direction: rtl;
+  }
+
+  /* RTL support for pagination */
+  .rtl .pagination {
+    direction: rtl;
+  }
+
+  /* RTL support for tooltips */
+  .rtl .tooltip {
+    text-align: right;
+  }
+
+  /* RTL support for alerts */
+  .rtl .alert {
+    text-align: right;
+  }
+
+  /* RTL support for notifications */
+  .rtl .notification {
+    text-align: right;
+  }
+
+  /* RTL support for form groups */
+  .rtl .form-group {
+    direction: rtl;
+  }
+
+  /* RTL support for form sections */
+  .rtl .form-section {
+    direction: rtl;
+  }
+
+  /* RTL support for form actions */
+  .rtl .form-actions {
+    direction: rtl;
+  }
+
+  /* RTL support for data tables */
+  .rtl .data-table {
+    direction: rtl;
+  }
+
+  .rtl .data-table th,
+  .rtl .data-table td {
+    text-align: right;
+  }
+
+  /* RTL support for status indicators */
+  .rtl .status-indicator {
+    text-align: center;
+  }
+
+  /* RTL support for progress bars */
+  .rtl .progress-bar {
+    direction: rtl;
+  }
+
+  /* RTL support for sliders */
+  .rtl .slider {
+    direction: rtl;
+  }
+
+  /* RTL support for toggle switches */
+  .rtl .toggle-switch {
+    direction: rtl;
+  }
+
+  /* RTL support for checkboxes and radio buttons */
+  .rtl .checkbox,
+  .rtl .radio {
+    direction: rtl;
+  }
+
+  /* RTL support for file uploads */
+  .rtl .file-upload {
+    direction: rtl;
+  }
+
+  /* RTL support for date pickers */
+  .rtl .date-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for time pickers */
+  .rtl .time-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for color pickers */
+  .rtl .color-picker {
+    direction: rtl;
+  }
+
+  /* RTL support for rich text editors */
+  .rtl .rich-text-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for code editors */
+  .rtl .code-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for markdown editors */
+  .rtl .markdown-editor {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for spreadsheet components */
+  .rtl .spreadsheet {
+    direction: rtl;
+  }
+
+  .rtl .spreadsheet th,
+  .rtl .spreadsheet td {
+    text-align: right;
+  }
+
+  /* RTL support for chart components */
+  .rtl .chart-container {
+    direction: rtl;
+  }
+
+  /* RTL support for calendar components */
+  .rtl .calendar {
+    direction: rtl;
+  }
+
+  /* RTL support for timeline components */
+  .rtl .timeline {
+    direction: rtl;
+  }
+
+  /* RTL support for tree components */
+  .rtl .tree {
+    direction: rtl;
+  }
+
+  /* RTL support for accordion components */
+  .rtl .accordion {
+    direction: rtl;
+  }
+
+  /* RTL support for tabs */
+  .rtl .tabs {
+    direction: rtl;
+  }
+
+  /* RTL support for stepper components */
+  .rtl .stepper {
+    direction: rtl;
+  }
+
+  /* RTL support for wizard components */
+  .rtl .wizard {
+    direction: rtl;
+  }
+
+  /* RTL support for carousel components */
+  .rtl .carousel {
+    direction: rtl;
+  }
+
+  /* RTL support for gallery components */
+  .rtl .gallery {
+    direction: rtl;
+  }
+
+  /* RTL support for map components */
+  .rtl .map-container {
+    direction: rtl;
+  }
+
+  /* RTL support for video players */
+  .rtl .video-player {
+    direction: rtl;
+  }
+
+  /* RTL support for audio players */
+  .rtl .audio-player {
+    direction: rtl;
+  }
+
+  /* RTL support for chat components */
+  .rtl .chat-container {
+    direction: rtl;
+  }
+
+  .rtl .chat-message {
+    text-align: right;
+  }
+
+  /* RTL support for comment systems */
+  .rtl .comment-system {
+    direction: rtl;
+  }
+
+  .rtl .comment {
+    text-align: right;
+  }
+
+  /* RTL support for rating components */
+  .rtl .rating {
+    direction: rtl;
+  }
+
+  /* RTL support for review components */
+  .rtl .review {
+    text-align: right;
+  }
+
+  /* RTL support for feedback forms */
+  .rtl .feedback-form {
+    direction: rtl;
+  }
+
+  /* RTL support for survey components */
+  .rtl .survey {
+    direction: rtl;
+  }
+
+  /* RTL support for quiz components */
+  .rtl .quiz {
+    direction: rtl;
+  }
+
+  /* RTL support for game components */
+  .rtl .game {
+    direction: rtl;
+  }
+
+  /* RTL support for social media components */
+  .rtl .social-media {
+    direction: rtl;
+  }
+
+  /* RTL support for e-commerce components */
+  .rtl .e-commerce {
+    direction: rtl;
+  }
+
+  /* RTL support for booking components */
+  .rtl .booking {
+    direction: rtl;
+  }
+
+  /* RTL support for reservation components */
+  .rtl .reservation {
+    direction: rtl;
+  }
+
+  /* RTL support for appointment components */
+  .rtl .appointment {
+    direction: rtl;
+  }
+
+  /* RTL support for scheduling components */
+  .rtl .scheduling {
+    direction: rtl;
+  }
+
+  /* RTL support for project management components */
+  .rtl .project-management {
+    direction: rtl;
+  }
+
+  /* RTL support for task management components */
+  .rtl .task-management {
+    direction: rtl;
+  }
+
+  /* RTL support for kanban boards */
+  .rtl .kanban-board {
+    direction: rtl;
+  }
+
+  /* RTL support for gantt charts */
+  .rtl .gantt-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for mind maps */
+  .rtl .mind-map {
+    direction: rtl;
+  }
+
+  /* RTL support for flowcharts */
+  .rtl .flowchart {
+    direction: rtl;
+  }
+
+  /* RTL support for diagrams */
+  .rtl .diagram {
+    direction: rtl;
+  }
+
+  /* RTL support for presentations */
+  .rtl .presentation {
+    direction: rtl;
+  }
+
+  /* RTL support for slides */
+  .rtl .slide {
+    direction: rtl;
+  }
+
+  /* RTL support for documents */
+  .rtl .document {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for reports */
+  .rtl .report {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* RTL support for dashboards */
+  .rtl .dashboard {
+    direction: rtl;
+  }
+
+  /* RTL support for analytics */
+  .rtl .analytics {
+    direction: rtl;
+  }
+
+  /* RTL support for metrics */
+  .rtl .metrics {
+    direction: rtl;
+  }
+
+  /* RTL support for KPIs */
+  .rtl .kpi {
+    direction: rtl;
+  }
+
+  /* RTL support for scorecards */
+  .rtl .scorecard {
+    direction: rtl;
+  }
+
+  /* RTL support for heatmaps */
+  .rtl .heatmap {
+    direction: rtl;
+  }
+
+  /* RTL support for scatter plots */
+  .rtl .scatter-plot {
+    direction: rtl;
+  }
+
+  /* RTL support for bar charts */
+  .rtl .bar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for line charts */
+  .rtl .line-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for pie charts */
+  .rtl .pie-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for donut charts */
+  .rtl .donut-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for area charts */
+  .rtl .area-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for radar charts */
+  .rtl .radar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for polar charts */
+  .rtl .polar-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for bubble charts */
+  .rtl .bubble-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for candlestick charts */
+  .rtl .candlestick-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for stock charts */
+  .rtl .stock-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for financial charts */
+  .rtl .financial-chart {
+    direction: rtl;
+  }
+
+  /* RTL support for trading components */
+  .rtl .trading {
+    direction: rtl;
+  }
+
+  /* RTL support for portfolio components */
+  .rtl .portfolio {
+    direction: rtl;
+  }
+
+  /* RTL support for investment components */
+  .rtl .investment {
+    direction: rtl;
+  }
+
+  /* RTL support for banking components */
+  .rtl .banking {
+    direction: rtl;
+  }
+
+  /* RTL support for insurance components */
+  .rtl .insurance {
+    direction: rtl;
+  }
+
+  /* RTL support for real estate components */
+  .rtl .real-estate {
+    direction: rtl;
+  }
+
+  /* RTL support for healthcare components */
+  .rtl .healthcare {
+    direction: rtl;
+  }
+
+  /* RTL support for education components */
+  .rtl .education {
+    direction: rtl;
+  }
+
+  /* RTL support for government components */
+  .rtl .government {
+    direction: rtl;
+  }
+
+  /* RTL support for nonprofit components */
+  .rtl .nonprofit {
+    direction: rtl;
+  }
+
+  /* RTL support for religious components */
+  .rtl .religious {
+    direction: rtl;
+  }
+
+  /* RTL support for cultural components */
+  .rtl .cultural {
+    direction: rtl;
+  }
+
+  /* RTL support for entertainment components */
+  .rtl .entertainment {
+    direction: rtl;
+  }
+
+  /* RTL support for sports components */
+  .rtl .sports {
+    direction: rtl;
+  }
+
+  /* RTL support for travel components */
+  .rtl .travel {
+    direction: rtl;
+  }
+
+  /* RTL support for food components */
+  .rtl .food {
+    direction: rtl;
+  }
+
+  /* RTL support for fashion components */
+  .rtl .fashion {
+    direction: rtl;
+  }
+
+  /* RTL support for beauty components */
+  .rtl .beauty {
+    direction: rtl;
+  }
+
+  /* RTL support for fitness components */
+  .rtl .fitness {
+    direction: rtl;
+  }
+
+  /* RTL support for wellness components */
+  .rtl .wellness {
+    direction: rtl;
+  }
+
+  /* RTL support for medical components */
+  .rtl .medical {
+    direction: rtl;
+  }
+
+  /* RTL support for dental components */
+  .rtl .dental {
+    direction: rtl;
+  }
+
+  /* RTL support for veterinary components */
+  .rtl .veterinary {
+    direction: rtl;
+  }
+
+  /* RTL support for legal components */
+  .rtl .legal {
+    direction: rtl;
+  }
+
+  /* RTL support for accounting components */
+  .rtl .accounting {
+    direction: rtl;
+  }
+
+  /* RTL support for tax components */
+  .rtl .tax {
+    direction: rtl;
+  }
+
+  /* RTL support for audit components */
+  .rtl .audit {
+    direction: rtl;
+  }
+
+  /* RTL support for compliance components */
+  .rtl .compliance {
+    direction: rtl;
+  }
+
+  /* RTL support for risk management components */
+  .rtl .risk-management {
+    direction: rtl;
+  }
+
+  /* RTL support for governance components */
+  .rtl .governance {
+    direction: rtl;
+  }
+
+  /* RTL support for sustainability components */
+  .rtl .sustainability {
+    direction: rtl;
+  }
+
+  /* RTL support for environmental components */
+  .rtl .environmental {
+    direction: rtl;
+  }
+
+  /* RTL support for social responsibility components */
+  .rtl .social-responsibility {
+    direction: rtl;
+  }
+
+  /* RTL support for corporate social responsibility */
+  .rtl .csr {
+    direction: rtl;
+  }
+
+  /* RTL support for ESG components */
+  .rtl .esg {
+    direction: rtl;
+  }
+
+  /* RTL support for impact investing */
+  .rtl .impact-investing {
+    direction: rtl;
+  }
+
+  /* RTL support for microfinance */
+  .rtl .microfinance {
+    direction: rtl;
+  }
+
+  /* RTL support for crowdfunding */
+  .rtl .crowdfunding {
+    direction: rtl;
+  }
+
+  /* RTL support for peer-to-peer lending */
+  .rtl .p2p-lending {
+    direction: rtl;
+  }
+
+  /* RTL support for blockchain components */
+  .rtl .blockchain {
+    direction: rtl;
+  }
+
+  /* RTL support for cryptocurrency components */
+  .rtl .cryptocurrency {
+    direction: rtl;
+  }
+
+  /* RTL support for NFT components */
+  .rtl .nft {
+    direction: rtl;
+  }
+
+  /* RTL support for DeFi components */
+  .rtl .defi {
+    direction: rtl;
+  }
+
+  /* RTL support for Web3 components */
+  .rtl .web3 {
+    direction: rtl;
+  }
+
+  /* RTL support for metaverse components */
+  .rtl .metaverse {
+    direction: rtl;
+  }
+
+  /* RTL support for AI components */
+  .rtl .ai {
+    direction: rtl;
+  }
+
+  /* RTL support for machine learning components */
+  .rtl .machine-learning {
+    direction: rtl;
+  }
+
+  /* RTL support for deep learning components */
+  .rtl .deep-learning {
+    direction: rtl;
+  }
+
+  /* RTL support for natural language processing */
+  .rtl .nlp {
+    direction: rtl;
+  }
+
+  /* RTL support for computer vision components */
+  .rtl .computer-vision {
+    direction: rtl;
+  }
+
+  /* RTL support for robotics components */
+  .rtl .robotics {
+    direction: rtl;
+  }
+
+  /* RTL support for IoT components */
+  .rtl .iot {
+    direction: rtl;
+  }
+
+  /* RTL support for edge computing components */
+  .rtl .edge-computing {
+    direction: rtl;
+  }
+
+  /* RTL support for cloud computing components */
+  .rtl .cloud-computing {
+    direction: rtl;
+  }
+
+  /* RTL support for serverless components */
+  .rtl .serverless {
+    direction: rtl;
+  }
+
+  /* RTL support for containerization components */
+  .rtl .containerization {
+    direction: rtl;
+  }
+
+  /* RTL support for orchestration components */
+  .rtl .orchestration {
+    direction: rtl;
+  }
+
+  /* RTL support for DevOps components */
+  .rtl .devops {
+    direction: rtl;
+  }
+
+  /* RTL support for CI/CD components */
+  .rtl .ci-cd {
+    direction: rtl;
+  }
+
+  /* RTL support for monitoring components */
+  .rtl .monitoring {
+    direction: rtl;
+  }
+
+  /* RTL support for logging components */
+  .rtl .logging {
+    direction: rtl;
+  }
+
+  /* RTL support for tracing components */
+  .rtl .tracing {
+    direction: rtl;
+  }
+
+  /* RTL support for alerting components */
+  .rtl .alerting {
+    direction: rtl;
+  }
+
+  /* RTL support for incident management */
+  .rtl .incident-management {
+    direction: rtl;
+  }
+
+  /* RTL support for change management */
+  .rtl .change-management {
+    direction: rtl;
+  }
+
+  /* RTL support for release management */
+  .rtl .release-management {
+    direction: rtl;
+  }
+
+  /* RTL support for configuration management */
+  .rtl .configuration-management {
+    direction: rtl;
+  }
+
+  /* RTL support for asset management */
+  .rtl .asset-management {
+    direction: rtl;
+  }
+
+  /* RTL support for inventory management */
+  .rtl .inventory-management {
+    direction: rtl;
+  }
+
+  /* RTL support for supply chain management */
+  .rtl .supply-chain-management {
+    direction: rtl;
+  }
+
+  /* RTL support for logistics components */
+  .rtl .logistics {
+    direction: rtl;
+  }
+
+  /* RTL support for transportation components */
+  .rtl .transportation {
+    direction: rtl;
+  }
+
+  /* RTL support for warehousing components */
+  .rtl .warehousing {
+    direction: rtl;
+  }
+
+  /* RTL support for distribution components */
+  .rtl .distribution {
+    direction: rtl;
+  }
+
+  /* RTL support for procurement components */
+  .rtl .procurement {
+    direction: rtl;
+  }
+
+  /* RTL support for vendor management */
+  .rtl .vendor-management {
+    direction: rtl;
+  }
+
+  /* RTL support for contract management */
+  .rtl .contract-management {
+    direction: rtl;
+  }
+
+  /* RTL support for legal document management */
+  .rtl .legal-document-management {
+    direction: rtl;
+  }
+
+  /* RTL support for document management systems */
+  .rtl .document-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for content management systems */
+  .rtl .content-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for knowledge management */
+  .rtl .knowledge-management {
+    direction: rtl;
+  }
+
+  /* RTL support for learning management systems */
+  .rtl .learning-management-system {
+    direction: rtl;
+  }
+
+  /* RTL support for customer relationship management */
+  .rtl .crm {
+    direction: rtl;
+  }
+
+  /* RTL support for enterprise resource planning */
+  .rtl .erp {
+    direction: rtl;
+  }
+
+  /* RTL support for human resources management */
+  .rtl .hrm {
+    direction: rtl;
+  }
+
+  /* RTL support for payroll management */
+  .rtl .payroll-management {
+    direction: rtl;
+  }
+
+  /* RTL support for time and attendance */
+  .rtl .time-attendance {
+    direction: rtl;
+  }
+
+  /* RTL support for leave management */
+  .rtl .leave-management {
+    direction: rtl;
+  }
+
+  /* RTL support for performance management */
+  .rtl .performance-management {
+    direction: rtl;
+  }
+
+  /* RTL support for recruitment components */
+  .rtl .recruitment {
+    direction: rtl;
+  }
+
+  /* RTL support for onboarding components */
+  .rtl .onboarding {
+    direction: rtl;
+  }
+
+  /* RTL support for training components */
+  .rtl .training {
+    direction: rtl;
+  }
+
+  /* RTL support for development components */
+  .rtl .development {
+    direction: rtl;
+  }
+
+  /* RTL support for career planning */
+  .rtl .career-planning {
+    direction: rtl;
+  }
+
+  /* RTL support for succession planning */
+  .rtl .succession-planning {
+    direction: rtl;
+  }
+
+  /* RTL support for organizational development */
+  .rtl .organizational-development {
+    direction: rtl;
+  }
+
+  /* RTL support for change management */
+  .rtl .change-management {
+    direction: rtl;
+  }
+
+  /* RTL support for culture management */
+  .rtl .culture-management {
+    direction: rtl;
+  }
+
+  /* RTL support for diversity and inclusion */
+  .rtl .diversity-inclusion {
+    direction: rtl;
+  }
+
+  /* RTL support for employee engagement */
+  .rtl .employee-engagement {
+    direction: rtl;
+  }
+
+  /* RTL support for employee satisfaction */
+  .rtl .employee-satisfaction {
+    direction: rtl;
+  }
+
+  /* RTL support for employee retention */
+  .rtl .employee-retention {
+    direction: rtl;
+  }
+
+  /* RTL support for employee turnover */
+  .rtl .employee-turnover {
+    direction: rtl;
+  }
+
+  /* RTL support for employee productivity */
+  .rtl .employee-productivity {
+    direction: rtl;
+  }
+
+  /* RTL support for employee performance */
+  .rtl .employee-performance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee development */
+  .rtl .employee-development {
+    direction: rtl;
+  }
+
+  /* RTL support for employee training */
+  .rtl .employee-training {
+    direction: rtl;
+  }
+
+  /* RTL support for employee education */
+  .rtl .employee-education {
+    direction: rtl;
+  }
+
+  /* RTL support for employee certification */
+  .rtl .employee-certification {
+    direction: rtl;
+  }
+
+  /* RTL support for employee licensing */
+  .rtl .employee-licensing {
+    direction: rtl;
+  }
+
+  /* RTL support for employee compliance */
+  .rtl .employee-compliance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee safety */
+  .rtl .employee-safety {
+    direction: rtl;
+  }
+
+  /* RTL support for employee health */
+  .rtl .employee-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee wellness */
+  .rtl .employee-wellness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee benefits */
+  .rtl .employee-benefits {
+    direction: rtl;
+  }
+
+  /* RTL support for employee compensation */
+  .rtl .employee-compensation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee rewards */
+  .rtl .employee-rewards {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recognition */
+  .rtl .employee-recognition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee motivation */
+  .rtl .employee-motivation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee morale */
+  .rtl .employee-morale {
+    direction: rtl;
+  }
+
+  /* RTL support for employee satisfaction */
+  .rtl .employee-satisfaction {
+    direction: rtl;
+  }
+
+  /* RTL support for employee happiness */
+  .rtl .employee-happiness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee well-being */
+  .rtl .employee-well-being {
+    direction: rtl;
+  }
+
+  /* RTL support for employee quality of life */
+  .rtl .employee-quality-of-life {
+    direction: rtl;
+  }
+
+  /* RTL support for employee work-life balance */
+  .rtl .employee-work-life-balance {
+    direction: rtl;
+  }
+
+  /* RTL support for employee stress management */
+  .rtl .employee-stress-management {
+    direction: rtl;
+  }
+
+  /* RTL support for employee mental health */
+  .rtl .employee-mental-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee physical health */
+  .rtl .employee-physical-health {
+    direction: rtl;
+  }
+
+  /* RTL support for employee nutrition */
+  .rtl .employee-nutrition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee fitness */
+  .rtl .employee-fitness {
+    direction: rtl;
+  }
+
+  /* RTL support for employee exercise */
+  .rtl .employee-exercise {
+    direction: rtl;
+  }
+
+  /* RTL support for employee sports */
+  .rtl .employee-sports {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recreation */
+  .rtl .employee-recreation {
+    direction: rtl;
+  }
+
+  /* RTL support for employee hobbies */
+  .rtl .employee-hobbies {
+    direction: rtl;
+  }
+
+  /* RTL support for employee interests */
+  .rtl .employee-interests {
+    direction: rtl;
+  }
+
+  /* RTL support for employee skills */
+  .rtl .employee-skills {
+    direction: rtl;
+  }
+
+  /* RTL support for employee competencies */
+  .rtl .employee-competencies {
+    direction: rtl;
+  }
+
+  /* RTL support for employee capabilities */
+  .rtl .employee-capabilities {
+    direction: rtl;
+  }
+
+  /* RTL support for employee strengths */
+  .rtl .employee-strengths {
+    direction: rtl;
+  }
+
+  /* RTL support for employee weaknesses */
+  .rtl .employee-weaknesses {
+    direction: rtl;
+  }
+
+  /* RTL support for employee opportunities */
+  .rtl .employee-opportunities {
+    direction: rtl;
+  }
+
+  /* RTL support for employee threats */
+  .rtl .employee-threats {
+    direction: rtl;
+  }
+
+  /* RTL support for employee goals */
+  .rtl .employee-goals {
+    direction: rtl;
+  }
+
+  /* RTL support for employee objectives */
+  .rtl .employee-objectives {
+    direction: rtl;
+  }
+
+  /* RTL support for employee targets */
+  .rtl .employee-targets {
+    direction: rtl;
+  }
+
+  /* RTL support for employee milestones */
+  .rtl .employee-milestones {
+    direction: rtl;
+  }
+
+  /* RTL support for employee achievements */
+  .rtl .employee-achievements {
+    direction: rtl;
+  }
+
+  /* RTL support for employee accomplishments */
+  .rtl .employee-accomplishments {
+    direction: rtl;
+  }
+
+  /* RTL support for employee contributions */
+  .rtl .employee-contributions {
+    direction: rtl;
+  }
+
+  /* RTL support for employee impact */
+  .rtl .employee-impact {
+    direction: rtl;
+  }
+
+  /* RTL support for employee value */
+  .rtl .employee-value {
+    direction: rtl;
+  }
+
+  /* RTL support for employee worth */
+  .rtl .employee-worth {
+    direction: rtl;
+  }
+
+  /* RTL support for employee ROI */
+  .rtl .employee-roi {
+    direction: rtl;
+  }
+
+  /* RTL support for employee cost */
+  .rtl .employee-cost {
+    direction: rtl;
+  }
+
+  /* RTL support for employee investment */
+  .rtl .employee-investment {
+    direction: rtl;
+  }
+
+  /* RTL support for employee return */
+  .rtl .employee-return {
+    direction: rtl;
+  }
+
+  /* RTL support for employee benefit */
+  .rtl .employee-benefit {
+    direction: rtl;
+  }
+
+  /* RTL support for employee advantage */
+  .rtl .employee-advantage {
+    direction: rtl;
+  }
+
+  /* RTL support for employee gain */
+  .rtl .employee-gain {
+    direction: rtl;
+  }
+
+  /* RTL support for employee profit */
+  .rtl .employee-profit {
+    direction: rtl;
+  }
+
+  /* RTL support for employee revenue */
+  .rtl .employee-revenue {
+    direction: rtl;
+  }
+
+  /* RTL support for employee income */
+  .rtl .employee-income {
+    direction: rtl;
+  }
+
+  /* RTL support for employee salary */
+  .rtl .employee-salary {
+    direction: rtl;
+  }
+
+  /* RTL support for employee wages */
+  .rtl .employee-wages {
+    direction: rtl;
+  }
+
+  /* RTL support for employee hourly rate */
+  .rtl .employee-hourly-rate {
+    direction: rtl;
+  }
+
+  /* RTL support for employee commission */
+  .rtl .employee-commission {
+    direction: rtl;
+  }
+
+  /* RTL support for employee bonus */
+  .rtl .employee-bonus {
+    direction: rtl;
+  }
+
+  /* RTL support for employee incentive */
+  .rtl .employee-incentive {
+    direction: rtl;
+  }
+
+  /* RTL support for employee reward */
+  .rtl .employee-reward {
+    direction: rtl;
+  }
+
+  /* RTL support for employee recognition */
+  .rtl .employee-recognition {
+    direction: rtl;
+  }
+
+  /* RTL support for employee appreciation */
+  .rtl .employee-appreciation {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Force ALL sidebar elements to use relative positioning */
+  .rtl [data-sidebar] {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  .rtl [data-sidebar="sidebar"] {
+    border-left: 1px solid hsl(var(--border));
+    border-right: none;
+  }
+
+  /* Override any fixed positioning on sidebar containers */
+  .rtl .group.peer {
+    position: relative !important;
+  }
+
+  .rtl .group.peer > div {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+  }
+
+  /* Force relative positioning for all sidebar-related elements */
+  .rtl [class*="sidebar"] {
+    position: relative !important;
+  }
+
+  /* Override any absolute or fixed positioning in RTL mode */
+  .rtl .fixed {
+    position: relative !important;
+  }
+
+  .rtl .absolute {
+    position: relative !important;
+  }
+
+  /* Sidebar container styling */
+  .sidebar-container {
+    position: relative;
+    display: flex;
+    width: 16rem;
+    flex-shrink: 0;
+  }
+
+  .rtl-sidebar-container {
+    order: 2;
+  }
+
+  .rtl-sidebar-container [data-sidebar] {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+  }
+
+  /* RTL layout container */
+  .rtl .group\/sidebar-wrapper {
+    flex-direction: row-reverse;
+  }
+
+  /* RTL content area styling */
+  .rtl-content {
+    direction: rtl;
+  }
+
+  .rtl-content * {
+    text-align: start;
+  }
+
+  .rtl-content .flex {
+    direction: rtl;
+  }
+
+  .rtl-content .flex > * {
+    direction: initial;
+  }
+
+  .rtl-content header .flex {
+    direction: rtl;
+  }
+
+  .rtl-content table {
+    direction: rtl;
+  }
+
+  .rtl-content table th,
+  .rtl-content table td {
+    text-align: right;
+  }
+
+  .rtl-content .text-left {
+    text-align: right;
+  }
+
+  .rtl-content .text-right {
+    text-align: left;
   }
 
   /* Modern colorful scrollbar */
@@ -248,8 +3104,111 @@ All colors MUST be HSL for consistency and theming.
     animation: slideUp 0.4s ease-out;
   }
 
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  .animate-pulse-slow {
+    /* No animation */
+    opacity: 1;
+  }
+
+  .animate-float {
+    /* No animation */
+    transform: none;
+  }
+
+  .animate-glow {
+    /* No animation */
+    box-shadow: none;
+  }
+
   .hover-lift {
-    @apply transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg;
+    @apply transition-shadow duration-200 hover:shadow-md;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-colored;
+  }
+
+  .shimmer {
+    /* No shimmer effect */
+    background: transparent;
+  }
+
+  .glass-effect {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.2);
+  }
+
+  .card-interactive {
+    @apply transition-all duration-300 hover:shadow-md;
+  }
+
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gradient-border {
+    position: relative;
+    background: var(--gradient-primary);
+    border-radius: var(--radius);
+    padding: 2px;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: hsl(var(--card));
+    border-radius: calc(var(--radius) - 1px);
+  }
+}
+
+@layer utilities {
+  .shadow-colored {
+    box-shadow: var(--shadow-colored);
+  }
+
+  .shadow-purple {
+    box-shadow: var(--shadow-purple);
+  }
+
+  .shadow-success {
+    box-shadow: var(--shadow-success);
+  }
+
+  .shadow-warning {
+    box-shadow: var(--shadow-warning);
+  }
+
+  .shadow-glass {
+    box-shadow: var(--shadow-glass);
+  }
+
+  .stagger-animation > * {
+    animation-delay: calc(var(--stagger) * 0.1s);
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-gpu {
+    transform: translateZ(0);
+    will-change: transform;
   }
 }
 
@@ -272,5 +3231,74 @@ All colors MUST be HSL for consistency and theming.
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 40px hsl(var(--accent) / 0.4);
   }
 }

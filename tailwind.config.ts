@@ -127,5 +127,60 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }: { addUtilities: any }) {
+			const newUtilities = {
+				'.rtl': {
+					direction: 'rtl',
+				},
+				'.ltr': {
+					direction: 'ltr',
+				},
+				'.rtl .sidebar-left': {
+					right: '0',
+					left: 'auto',
+				},
+				'.rtl .sidebar-right': {
+					left: '0',
+					right: 'auto',
+				},
+				'.rtl .ml-auto': {
+					'margin-left': 'auto',
+					'margin-right': '0',
+				},
+				'.rtl .mr-auto': {
+					'margin-right': 'auto',
+					'margin-left': '0',
+				},
+				'.rtl .text-left': {
+					'text-align': 'right',
+				},
+				'.rtl .text-right': {
+					'text-align': 'left',
+				},
+				'.rtl .border-l': {
+					'border-left': 'none',
+					'border-right': '1px solid var(--border)',
+				},
+				'.rtl .border-r': {
+					'border-right': 'none',
+					'border-left': '1px solid var(--border)',
+				},
+				'.rtl .rounded-l': {
+					'border-top-left-radius': '0',
+					'border-bottom-left-radius': '0',
+					'border-top-right-radius': 'var(--radius)',
+					'border-bottom-right-radius': 'var(--radius)',
+				},
+				'.rtl .rounded-r': {
+					'border-top-right-radius': '0',
+					'border-bottom-right-radius': '0',
+					'border-top-left-radius': 'var(--radius)',
+					'border-bottom-left-radius': 'var(--radius)',
+				}
+			};
+			addUtilities(newUtilities);
+		}
+	],
 } satisfies Config;

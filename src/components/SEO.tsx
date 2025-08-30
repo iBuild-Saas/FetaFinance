@@ -22,15 +22,14 @@ const SEO = ({ title, description, canonical }: SEOProps) => {
 
     if (description) setMeta("description", description);
 
-    if (canonical) {
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement("link");
-        link.setAttribute("rel", "canonical");
-        document.head.appendChild(link);
-      }
-      link.setAttribute("href", canonical);
+    const href = canonical || window.location.href;
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement("link");
+      link.setAttribute("rel", "canonical");
+      document.head.appendChild(link);
     }
+    link.setAttribute("href", href);
   }, [title, description, canonical]);
 
   return null;

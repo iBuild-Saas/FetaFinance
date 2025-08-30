@@ -1,0 +1,5 @@
+@echo off
+echo VITE_SUPABASE_URL=https://kkrgyvbbqbnwbvujfgps.supabase.co > .env.local
+echo VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtrcmd5dmJicWJud2J2dWpmZ3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5MzA0MTAsImV4cCI6MjA3MTUwNjQxMH0.TcrkwA6DSVzTXRc0tDnxNaYGXsRfwSjJZ75_LglJdTE >> .env.local
+echo Environment file created successfully!
+pause
