@@ -203,3 +203,6 @@ SELECT '5. Check journal_entries table for audit trail' as step;
 SELECT '=== SYSTEM READY ===' as status;
 SELECT 'Complete system is ready for testing!' as message;
 SELECT 'Both journal entries AND stock movements will work!' as note;
+
+
+

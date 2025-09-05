@@ -106,3 +106,6 @@ SELECT '=== READY FOR CLEAN START ===' as status;
 SELECT 'All dependencies removed successfully!' as message;
 SELECT 'Now run: \i CLEAN_START_PURCHASE_INVOICE_SYSTEM.sql' as next_step;
 SELECT 'This will create a completely clean system' as note;
+
+
+

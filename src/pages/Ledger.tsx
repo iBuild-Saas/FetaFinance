@@ -27,8 +27,15 @@ type GeneralLedgerEntry = {
   reference?: string;
   journal_memo?: string;
   line_description?: string;
+  account_id: string;
+  account_code: string;
+  account_name: string;
+  account_type: string;
+  normal_balance: string;
+  line_number: number;
   debit_amount: number;
   credit_amount: number;
+  balance_effect: number;
   running_balance?: number;
 };
 
@@ -575,8 +582,7 @@ const Ledger = () => {
                             <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                             <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
                             <TableCell className="text-sm">
-                              {accounts.find(a => a.id === entry.account_id)?.account_code} — {' '}
-                              {accounts.find(a => a.id === entry.account_id)?.account_name}
+                              {entry.account_code} — {entry.account_name}
                             </TableCell>
                             <TableCell className="text-sm">
                               {entry.line_description || entry.journal_memo || '—'}

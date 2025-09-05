@@ -156,3 +156,6 @@ SELECT '5. Check stock_movements table for audit trail' as step;
 
 SELECT '=== SYSTEM READY ===' as status;
 SELECT 'Clean system is ready for testing!' as message;
+
+
+

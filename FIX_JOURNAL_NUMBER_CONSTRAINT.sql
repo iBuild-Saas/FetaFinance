@@ -95,3 +95,6 @@ END $$;
 
 SELECT '=== CONSTRAINT FIX COMPLETE ===' as info;
 SELECT 'The journal_number constraint issue should now be resolved.' as message;
+
+
+

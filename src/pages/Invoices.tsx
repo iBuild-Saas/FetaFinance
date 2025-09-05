@@ -195,9 +195,9 @@ const Invoices = () => {
       console.log('🔍 Fetching line items for invoice:', invoiceId);
       
       const { data, error } = await supabase
-        .from('invoice_line_items')
+        .from('sales_invoice_line_items')
         .select('*')
-        .eq('invoice_id', invoiceId)
+        .eq('sales_invoice_id', invoiceId)
         .order('created_at');
 
       if (error) {

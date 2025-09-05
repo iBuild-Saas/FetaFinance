@@ -48,6 +48,7 @@
     "items": "Items",
     "categories": "Categories",
     "unitsOfMeasure": "Units of Measure",
+    "paymentMethods": "Payment Methods",
     "salesInvoices": "Sales Invoices",
     "purchaseInvoices": "Purchase Invoices",
     "payments": "Payments",
@@ -201,7 +202,7 @@
     "overdue": "Overdue",
     "received": "Received"
   },
-  "common": {
+  "actions": {
     "create": "Create",
     "edit": "Edit",
     "delete": "Delete",

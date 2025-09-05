@@ -230,3 +230,6 @@ SELECT '=== SYSTEM READY ===' as status;
 SELECT 'Clean system created successfully!' as message;
 SELECT 'Journal entries: Use your existing system (SUBMITTED status)' as note;
 SELECT 'Stock movements: Use new system (RECEIVED status)' as note;
+
+
+

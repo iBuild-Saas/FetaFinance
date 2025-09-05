@@ -422,3 +422,6 @@ SELECT '=== COMPLETE DUPLICATE FIX FINISHED ===' as info;
 SELECT 'The journal system has been completely rebuilt with guaranteed unique entry numbers.' as message;
 SELECT 'Entry numbers now use: TYPE-INVOICE-TIMESTAMP-MICROSECONDS format.' as explanation;
 SELECT 'This should resolve all duplicate constraint violations.' as result;
+
+
+

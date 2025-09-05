@@ -12,7 +12,9 @@ import { useSupabase } from "@/contexts/SupabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useAccounting } from "@/state/accounting";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Eye, FileText, Calendar, Calculator, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { useCustomers } from "@/hooks/useCustomers";
+import { useSuppliers } from "@/hooks/useSuppliers";
+import { Plus, Edit, Trash2, Eye, FileText, Calendar, Calculator, ArrowLeft, CheckCircle, XCircle, X } from "lucide-react";
 import type { Database } from "@/lib/supabase";
 
 type ViewMode = "list" | "add" | "detail";
@@ -44,6 +46,14 @@ type JournalEntryLine = {
   description?: string;
   debit_amount: number;
   credit_amount: number;
+  customer_id?: string;
+  supplier_id?: string;
+  party_type?: 'CUSTOMER' | 'SUPPLIER' | '';
+  reference_document_type?: string;
+  reference_document_id?: string;
+  due_date?: string;
+  customers?: { name: string; customer_code: string };
+  suppliers?: { name: string; supplier_code: string };
   created_at: string;
 };
 
@@ -61,6 +71,8 @@ interface JournalEntryLineFormData {
   description: string;
   debit_amount: number;
   credit_amount: number;
+  party_name?: string;
+  party_type?: 'CUSTOMER' | 'SUPPLIER' | '';
 }
 
 const JournalEntries = () => {
@@ -68,6 +80,8 @@ const JournalEntries = () => {
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
+  const { customers } = useCustomers();
+  const { suppliers } = useSuppliers();
   
   // Get the active company from the navbar selection
   const activeCompany = companies?.find(c => c.id === state.activeCompanyId) || null;
@@ -88,7 +102,7 @@ const JournalEntries = () => {
   });
   
   const [lines, setLines] = useState<JournalEntryLineFormData[]>([
-    { account_id: "", description: "", debit_amount: 0, credit_amount: 0 }
+    { account_id: "", description: "", debit_amount: 0, credit_amount: 0, party_name: "", party_type: "" }
   ]);
 
   // Fetch companies first
@@ -252,7 +266,11 @@ const JournalEntries = () => {
       
       const { data, error } = await supabase
         .from('journal_entry_lines')
-        .select('*')
+        .select(`
+          *,
+          customers:customer_id(name, customer_code),
+          suppliers:supplier_id(name, supplier_code)
+        `)
         .eq('journal_entry_id', entryId)
         .order('created_at');
 
@@ -288,7 +306,7 @@ const JournalEntries = () => {
 
   // Add line
   const addLine = () => {
-    setLines(prev => [...prev, { account_id: "", description: "", debit_amount: 0, credit_amount: 0 }]);
+    setLines(prev => [...prev, { account_id: "", description: "", debit_amount: 0, credit_amount: 0, party_name: "", party_type: "" }]);
   };
 
   // Remove line
@@ -416,13 +434,53 @@ const JournalEntries = () => {
       }
 
       // Create journal entry lines
-      const linesData = lines.map((line, index) => ({
-        journal_entry_id: entry.id,
-        account_id: line.account_id,
-        description: line.description || null,
-        debit_amount: line.debit_amount || 0,
-        credit_amount: line.credit_amount || 0
-      }));
+      const linesData = lines.map((line, index) => {
+        // Find customer/supplier ID based on party name and type
+        let customer_id = null;
+        let supplier_id = null;
+        
+        console.log(`🔍 Processing line ${index + 1}:`, {
+          party_type: line.party_type,
+          party_name: line.party_name,
+          available_customers: customers.length,
+          available_suppliers: suppliers.length
+        });
+        
+        if (line.party_type === 'CUSTOMER' && line.party_name && line.party_name !== 'NONE') {
+          const customer = customers.find(c => c.name === line.party_name);
+          customer_id = customer?.id || null;
+          console.log(`👤 Customer lookup:`, { 
+            searching_for: line.party_name, 
+            found: customer, 
+            customer_id 
+          });
+        } else if (line.party_type === 'SUPPLIER' && line.party_name && line.party_name !== 'NONE') {
+          const supplier = suppliers.find(s => s.name === line.party_name);
+          supplier_id = supplier?.id || null;
+          console.log(`🏢 Supplier lookup:`, { 
+            searching_for: line.party_name, 
+            found: supplier, 
+            supplier_id,
+            all_suppliers: suppliers.map(s => ({ id: s.id, name: s.name })),
+            party_name_length: line.party_name?.length,
+            party_name_type: typeof line.party_name
+          });
+        }
+        
+        const lineData = {
+          journal_entry_id: entry.id,
+          account_id: line.account_id,
+          description: line.description || null,
+          debit_amount: line.debit_amount || 0,
+          credit_amount: line.credit_amount || 0,
+          party_type: line.party_type || null,
+          customer_id,
+          supplier_id
+        };
+        
+        console.log(`💾 Line data to save:`, lineData);
+        return lineData;
+      });
 
       const { error: linesError } = await supabase
         .from('journal_entry_lines')
@@ -475,7 +533,7 @@ const JournalEntries = () => {
       memo: "",
       status: "POSTED"
     });
-    setLines([{ account_id: "", description: "", debit_amount: 0, credit_amount: 0 }]);
+    setLines([{ account_id: "", description: "", debit_amount: 0, credit_amount: 0, party_name: "", party_type: "" }]);
     console.log('Form reset complete, status is now:', formData.status);
   };
 
@@ -578,76 +636,133 @@ const JournalEntries = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {/* Column Headers */}
-                  <div className="grid grid-cols-12 gap-4 px-3 py-2 text-sm font-medium text-muted-foreground border-b">
-                    <div className="col-span-4">Account</div>
-                    <div className="col-span-3">Description</div>
-                    <div className="col-span-2">Debit</div>
-                    <div className="col-span-2">Credit</div>
-                    <div className="col-span-1">Action</div>
-                  </div>
-                  
-                  {lines.map((line, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
-                      <div className="flex-1 grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-4">
-                          <Select value={line.account_id} onValueChange={(value) => updateLine(index, 'account_id', value)}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select detail account" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {accounts.map(account => (
-                                <SelectItem key={account.id} value={account.id}>
-                                  {account.account_code} — {account.account_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                        </div>
-                        <div className="col-span-3">
-                          <Input
-                            placeholder="Line description"
-                            value={line.description}
-                            onChange={e => updateLine(index, 'description', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={line.debit_amount || ''}
-                            onChange={e => updateLine(index, 'debit_amount', parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={line.credit_amount || ''}
-                            onChange={e => updateLine(index, 'credit_amount', parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          {lines.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeLine(index)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[25%]">Account</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[20%]">Description</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[15%]">Party</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[12%]">Type</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[12%]">Debit</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[12%]">Credit</th>
+                        <th className="text-left p-2 text-sm font-medium text-muted-foreground w-[4%]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lines.map((line, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">
+                            <Select value={line.account_id} onValueChange={(value) => updateLine(index, 'account_id', value)}>
+                              <SelectTrigger className="h-8 w-full">
+                                <SelectValue placeholder="Select detail account" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {accounts.map(account => (
+                                  <SelectItem key={account.id} value={account.id}>
+                                    {account.account_code} — {account.account_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              className="h-8 w-full"
+                              placeholder="Line description"
+                              value={line.description}
+                              onChange={e => updateLine(index, 'description', e.target.value)}
+                            />
+                          </td>
+                          <td className="p-2">
+                            {line.party_type === 'CUSTOMER' ? (
+                              <Select value={line.party_name || 'NONE'} onValueChange={(value) => updateLine(index, 'party_name', value === 'NONE' ? '' : value)}>
+                                <SelectTrigger className="h-8 w-full">
+                                  <SelectValue placeholder="Select customer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="NONE">None</SelectItem>
+                                  {customers.map(customer => (
+                                    <SelectItem key={customer.id} value={customer.name}>
+                                      {customer.customer_code} — {customer.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : line.party_type === 'SUPPLIER' ? (
+                              <Select value={line.party_name || 'NONE'} onValueChange={(value) => updateLine(index, 'party_name', value === 'NONE' ? '' : value)}>
+                                <SelectTrigger className="h-8 w-full">
+                                  <SelectValue placeholder="Select supplier" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="NONE">None</SelectItem>
+                                  {suppliers.map(supplier => (
+                                    <SelectItem key={supplier.id} value={supplier.name}>
+                                      {supplier.supplier_code} — {supplier.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                className="h-8 w-full"
+                                placeholder="Customer/Supplier"
+                                value={line.party_name || ''}
+                                onChange={e => updateLine(index, 'party_name', e.target.value)}
+                                disabled
+                              />
+                            )}
+                          </td>
+                          <td className="p-2">
+                            <Select value={line.party_type || 'NONE'} onValueChange={(value) => updateLine(index, 'party_type', value === 'NONE' ? '' : value)}>
+                              <SelectTrigger className="h-8 w-full">
+                                <SelectValue placeholder="Party Type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="NONE">None</SelectItem>
+                                <SelectItem value="CUSTOMER">Customer</SelectItem>
+                                <SelectItem value="SUPPLIER">Supplier</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              className="h-8 w-full"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={line.debit_amount || ''}
+                              onChange={e => updateLine(index, 'debit_amount', parseFloat(e.target.value) || 0)}
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              className="h-8 w-full"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={line.credit_amount || ''}
+                              onChange={e => updateLine(index, 'credit_amount', parseFloat(e.target.value) || 0)}
+                            />
+                          </td>
+                          <td className="p-2">
+                            {lines.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeLine(index)}
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
@@ -788,30 +903,11 @@ const JournalEntries = () => {
               <div className="space-y-4">
                 {selectedEntryLines.map((line) => (
                   <div key={line.id} className="border rounded-lg p-4">
-                    <div className="grid md:grid-cols-4 gap-4">
+                    <div className="grid md:grid-cols-6 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Account</Label>
                         <p>{(() => {
-                          console.log('🔍 Rendering account for line:');
-                          console.log('   Line ID:', line.id);
-                          console.log('   Account ID:', line.account_id);
-                          console.log('   Description:', line.description);
-                          console.log('   Debit Amount:', line.debit_amount);
-                          console.log('   Credit Amount:', line.credit_amount);
-                          
-                          console.log('📊 Available accounts (first 5):');
-                          accounts.slice(0, 5).forEach((acc, index) => {
-                            console.log(`   ${index + 1}. ID: ${acc.id}, Name: ${acc.account_name}, Type: ${acc.account_type}`);
-                          });
-                          
                           const account = findAccountById(line.account_id);
-                          console.log('🔍 Looking up account by ID:', { 
-                            lineDescription: line.description, 
-                            accountId: line.account_id,
-                            foundAccount: account,
-                            totalAccountsAvailable: accounts.length
-                          });
-                          
                           if (account) {
                             return account.account_name;
                           } else {
@@ -822,6 +918,18 @@ const JournalEntries = () => {
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Description</Label>
                         <p className="text-sm">{line.description || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Party</Label>
+                        <p className="text-sm">{(() => {
+                          if (line.customers) return `${line.customers.customer_code} — ${line.customers.name}`;
+                          if (line.suppliers) return `${line.suppliers.supplier_code} — ${line.suppliers.name}`;
+                          return 'N/A';
+                        })()}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Party Type</Label>
+                        <p className="text-sm">{line.party_type || 'N/A'}</p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Debit</Label>

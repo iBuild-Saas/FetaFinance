@@ -1,4 +1,4 @@
-import { Building2, ShoppingCart, TrendingUp, Package, Users, FileText, Calculator, BarChart3, Plus, BookOpen, ChevronRight, FolderOpen, Ruler, Settings } from "lucide-react";
+import { Building2, ShoppingCart, TrendingUp, Package, Users, FileText, Calculator, BarChart3, Plus, BookOpen, ChevronRight, FolderOpen, Ruler, Settings, DollarSign, CreditCard } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,6 +42,7 @@ const getModules = (t: any) => [
       { title: t("modules.items"), path: "/items", icon: Package },
       { title: t("modules.categories"), path: "/categories", icon: FolderOpen },
       { title: t("modules.unitsOfMeasure"), path: "/units-of-measure", icon: Ruler },
+      { title: t("modules.paymentMethods"), path: "/payment-methods", icon: Calculator },
     ]
   },
   {
@@ -95,6 +96,8 @@ const getModules = (t: any) => [
     docs: [
       { title: t("modules.financialReports"), path: "/reports", icon: BarChart3 },
       { title: t("modules.trialBalance"), path: "/trial-balance", icon: Calculator },
+      { title: "Accounts Receivable", path: "/accounts-receivable", icon: DollarSign },
+      { title: "Accounts Payable", path: "/accounts-payable", icon: CreditCard },
     ]
   }
 ];

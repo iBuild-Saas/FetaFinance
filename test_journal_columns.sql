@@ -118,3 +118,6 @@ SELECT
 FROM information_schema.columns 
 WHERE table_name = 'journal_entries' 
 AND column_name IN ('entry_number', 'reference', 'memo', 'total_debit', 'total_credit', 'is_balanced', 'is_active', 'updated_at');
+
+
+

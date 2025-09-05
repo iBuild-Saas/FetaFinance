@@ -235,3 +235,6 @@ SELECT '=== DUPLICATE TRIGGER FIX COMPLETE ===' as info;
 SELECT 'The trigger now checks for existing journal entries before creating new ones.' as message;
 SELECT 'Only INSERT operations will create journal entries (not UPDATE).' as explanation;
 SELECT 'Duplicate entries have been cleaned up.' as result;
+
+
+

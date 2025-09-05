@@ -155,3 +155,6 @@ Nothing  Journal   Stock    Payment
 **Stock Movements:** ✅ New system (RECEIVED)
 **Last Updated:** Current Date
 **Version:** 2.0.0
+
+
+

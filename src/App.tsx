@@ -17,6 +17,7 @@ import Items from "./pages/Items";
 import ItemDetails from "./pages/ItemDetails";
 import Categories from "./pages/Categories";
 import UnitsOfMeasure from "./pages/UnitsOfMeasure";
+import PaymentMethods from "./pages/PaymentMethods";
 import Dashboard from "./pages/Dashboard";
 import StockReconciliation from "./pages/StockReconciliation";
 import Invoices from "./pages/Invoices";
@@ -28,6 +29,8 @@ import TrialBalance from "./pages/TrialBalance";
 import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
 import AccountMappings from "./pages/AccountMappings";
+import AccountsReceivable from "./pages/AccountsReceivable";
+import AccountsPayable from "./pages/AccountsPayable";
 // import TestPage from "./pages/TestPage"; // No longer needed
 import { AccountingProvider } from "@/state/accounting";
 import { SupabaseProvider } from "@/contexts/SupabaseContext";
@@ -80,6 +83,7 @@ const App = () => (
                 <Route path="/items/:id" element={<ItemDetails />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/units-of-measure" element={<UnitsOfMeasure />} />
+                <Route path="/payment-methods" element={<PaymentMethods />} />
                 <Route path="/stock-balance" element={<Dashboard />} />
                 <Route path="/stock-reconciliation" element={<StockReconciliation />} />
                 <Route path="/invoices" element={<Invoices />} />
@@ -89,6 +93,8 @@ const App = () => (
                 <Route path="/journals" element={<JournalEntries />} />
                 <Route path="/ledger" element={<Ledger />} />
                 <Route path="/trial-balance" element={<TrialBalance />} />
+                <Route path="/accounts-receivable" element={<AccountsReceivable />} />
+                <Route path="/accounts-payable" element={<AccountsPayable />} />
                 <Route path="/reports" element={<Reports />} />
                 {/* <Route path="/test" element={<TestPage />} /> */}
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

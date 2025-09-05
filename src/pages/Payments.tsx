@@ -29,6 +29,7 @@ type Payment = {
   company_id: string;
   payment_date: string;
   payment_method: string;
+  payment_method_id?: string;
   reference_number: string;
   amount: number;
   notes?: string;
@@ -37,6 +38,14 @@ type Payment = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+};
+
+type PaymentMethod = {
+  id: string;
+  name: string;
+  account_id: string;
+  account_code: string;
+  account_name: string;
 };
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -63,10 +72,12 @@ interface PaymentFormData {
   invoice_id?: string;
   payment_date: string;
   payment_method: string;
+  payment_method_id?: string;
   reference_number: string;
   amount: number;
   notes: string;
   status: string;
+  currency: string;
 }
 
 const Payments = () => {
@@ -83,6 +94,7 @@ const Payments = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [salesInvoices, setSalesInvoices] = useState<SalesInvoice[]>([]);
   const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewMode>("list");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -95,11 +107,13 @@ const Payments = () => {
     supplier_id: "",
     invoice_id: "",
     payment_date: new Date().toISOString().slice(0, 10),
-    payment_method: "BANK_TRANSFER",
+    payment_method: "",
+    payment_method_id: "",
     reference_number: "",
     amount: 0,
     notes: "",
-    status: "COMPLETED"
+    status: "COMPLETED",
+    currency: "USD"
   });
 
   // Fetch companies first
@@ -115,6 +129,7 @@ const Payments = () => {
       fetchSuppliers();
       fetchSalesInvoices();
       fetchPurchaseInvoices();
+      fetchPaymentMethods();
     }
   }, [activeCompany]);
 
@@ -232,17 +247,35 @@ const Payments = () => {
         .select('id, invoice_number, total_amount, supplier_id, status')
         .eq('company_id', activeCompany.id)
         .eq('is_active', true)
-        .eq('status', 'SUBMITTED')
-        .order('invoice_date', { ascending: false });
+        .order('invoice_number');
 
       if (error) throw error;
       setPurchaseInvoices(data || []);
     } catch (err) {
+      console.error('Error fetching purchase invoices:', err);
       toast({
         title: "Error",
         description: "Failed to fetch purchase invoices",
         variant: "destructive",
       });
+    }
+  };
+
+  // Fetch payment methods
+  const fetchPaymentMethods = async () => {
+    if (!activeCompany?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('payment_methods_view')
+        .select('*')
+        .eq('company_id', activeCompany.id)
+        .order('name');
+
+      if (error) throw error;
+      setPaymentMethods(data || []);
+    } catch (err) {
+      console.error('Error fetching payment methods:', err);
     }
   };
 
@@ -323,7 +356,8 @@ const Payments = () => {
         invoice_id: formData.invoice_id || null,
         company_id: activeCompany.id,
         payment_date: formData.payment_date,
-        payment_method: formData.payment_method,
+        payment_method: paymentMethods.find(pm => pm.id === formData.payment_method)?.name || '',
+        payment_method_id: formData.payment_method,
         reference_number: formData.reference_number || `REF-${Date.now()}`,
         amount: formData.amount,
         notes: formData.notes,
@@ -510,12 +544,11 @@ const Payments = () => {
                         <SelectValue />
                       </SelectTrigger>
                 <SelectContent>
-                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                        <SelectItem value="CASH">Cash</SelectItem>
-                        <SelectItem value="CHECK">Check</SelectItem>
-                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                        <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
-                        <SelectItem value="WIRE_TRANSFER">Wire Transfer</SelectItem>
+                        {paymentMethods.map((method) => (
+                          <SelectItem key={method.id} value={method.id}>
+                            {method.name}
+                          </SelectItem>
+                        ))}
                 </SelectContent>
               </Select>
                   </div>
