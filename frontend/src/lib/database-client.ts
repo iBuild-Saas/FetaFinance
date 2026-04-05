@@ -283,6 +283,11 @@ export class DatabaseClient {
 
   async rpc(name: string, params: Record<string, any> = {}): Promise<QueryResult<any>> {
     try {
+      const apiResult = await this.apiRpc(name, params);
+      if (!apiResult.error) {
+        return apiResult;
+      }
+
       switch (name) {
         case 'generate_invoice_number':
           return await this.generateInvoiceNumber(params.company_uuid || params.company_id);
@@ -307,6 +312,23 @@ export class DatabaseClient {
         default:
           return { data: null, error: { message: `RPC ${name} is not implemented in the local database client` } };
       }
+    } catch (error) {
+      return { data: null, error: { message: error instanceof Error ? error.message : 'RPC failed' } };
+    }
+  }
+
+  private async apiRpc(name: string, params: Record<string, any> = {}): Promise<QueryResult<any>> {
+    try {
+      const response = await fetch(`/api/rpc/${name}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        return { data: null, error: { message: payload.error || 'RPC failed' } };
+      }
+      return { data: payload, error: null };
     } catch (error) {
       return { data: null, error: { message: error instanceof Error ? error.message : 'RPC failed' } };
     }

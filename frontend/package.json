@@ -4,11 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "server": "node server/server.mjs",
-    "migrate": "node scripts/migrate.mjs",
-    "migrate:status": "node scripts/migrate.mjs --status",
-    "seed:topdrinks": "node scripts/seed-topdrinks.mjs",
+    "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

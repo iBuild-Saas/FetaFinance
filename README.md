@@ -1,38 +1,34 @@
 # Close Statement Hub
 
-Sales, accounting, inventory, and control-center app built with Vite, React, TypeScript, Tailwind, and a lightweight MySQL API.
+This repo is now split into two application folders:
 
-## Project layout
-
-- `src/`: frontend application
-- `server/`: Node API that serves the MySQL-backed resources used by the app
-- `migrations/`: ordered schema migrations applied with the local migration runner
-- `scripts/`: development, migration, and seed utilities
-- `seeds/topdrinks/`: reusable demo dataset for showcasing the app
+- `frontend/`: React + Vite + TypeScript UI
+- `backend/`: Laravel PHP API backed by MySQL
 
 ## Local development
 
+Frontend:
+
 ```sh
+cd frontend
 npm install
-npm run migrate
 npm run dev
 ```
 
-The dev script starts both the MySQL API server and the Vite frontend.
-
-## Useful commands
+Backend:
 
 ```sh
-npm run dev
-npm run server
-npm run migrate
-npm run migrate:status
-npm run seed:topdrinks
-npm run build
+cd backend
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-## Notes
+The frontend Vite server runs on `http://127.0.0.1:5173` and proxies `/api` requests to the Laravel backend on `http://127.0.0.1:8000`.
 
-- Migration details live in `MIGRATIONS.md`.
-- The broader schema and frontend alignment notes live in `development.md`.
-- The TopDrinks demo seed is documented in `seeds/topdrinks/README.md`.
+## Repo notes
+
+- Laravel migrations now live in `backend/database/migrations`.
+- Historical Node API and migration assets are kept under `backend/legacy-node/` for reference during the migration.
+- Existing high-level project notes remain at the repo root in `development.md` and `MIGRATIONS.md`.
