@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "ibuild-saas/feta-finance-backend",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Laravel backend for the Feta Finance application.",
+    "keywords": ["laravel", "finance", "accounting", "inventory"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
