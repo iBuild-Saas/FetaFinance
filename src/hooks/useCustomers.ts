@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/database-client';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAccounting } from '@/state/accounting';
-import type { Database } from '@/lib/supabase';
 
-type Customer = Database['public']['Tables']['customers']['Row'];
-type Company = Database['public']['Tables']['companies']['Row'];
+interface Customer {
+  id: string;
+  customer_code: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_id: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -25,16 +34,13 @@ export function useCustomers() {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', true)
-        .order('customer_code');
+      const { data, error: fetchError } = await db.from('customers').eq('company_id', activeCompany.id).select('*');
       
       if (fetchError) throw fetchError;
       
-      setCustomers(data || []);
+      // Filter active customers
+      const activeCustomers = (data || []).filter((c: Customer) => c.is_active !== false);
+      setCustomers(activeCustomers);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch customers');
     } finally {
@@ -47,25 +53,19 @@ export function useCustomers() {
     if (!activeCompany?.id) return 'CUST-0001';
     
     try {
-      const { data, error } = await supabase.rpc('generate_customer_code', {
-        company_uuid: activeCompany.id
-      });
-      
-      if (error) throw error;
-      return data || 'CUST-0001';
-    } catch (err) {
-      console.error('Error generating customer code:', err);
-      // Fallback: generate a simple code
+      // Simple fallback: generate code based on existing customers
       const maxCode = Math.max(...customers.map(c => {
-        const num = parseInt(c.customer_code.replace('CUST-', ''));
+        const num = parseInt(c.customer_code?.replace('CUST-', '') || '0');
         return isNaN(num) ? 0 : num;
       }), 0);
       return `CUST-${String(maxCode + 1).padStart(4, '0')}`;
+    } catch {
+      return 'CUST-0001';
     }
   };
 
   // Add a new customer
-  const addCustomer = async (customer: Omit<Customer, 'id' | 'created_at' | 'updated_at' | 'customer_code' | 'is_active'>) => {
+  const addCustomer = async (customer: any) => {
     if (!activeCompany?.id) return;
     
     try {
@@ -74,20 +74,18 @@ export function useCustomers() {
       // Generate customer code if not provided
       const customerCode = customer.customer_code || await generateCustomerCode();
       
-      const { data, error: insertError } = await supabase
-        .from('customers')
-        .insert([{ 
-          ...customer, 
-          company_id: activeCompany.id,
-          customer_code: customerCode,
-          is_active: true
-        }])
-        .select()
-        .single();
+      const { data, error: insertError } = await db.from('customers').insert({
+        ...customer, 
+        company_id: activeCompany.id,
+        customer_code: customerCode,
+        is_active: true
+      });
       
       if (insertError) throw insertError;
       
-      setCustomers(prev => [...prev, data]);
+      if (data) {
+        setCustomers(prev => [...prev, data as Customer]);
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add customer');
@@ -100,16 +98,13 @@ export function useCustomers() {
     try {
       setError(null);
       
-      const { data, error: updateError } = await supabase
-        .from('customers')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error: updateError } = await db.from('customers').update(id, updates);
       
       if (updateError) throw updateError;
       
-      setCustomers(prev => prev.map(cust => cust.id === id ? data : cust));
+      if (data) {
+        setCustomers(prev => prev.map(cust => cust.id === id ? data as Customer : cust));
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update customer');
@@ -120,29 +115,15 @@ export function useCustomers() {
   // Delete a customer (soft delete by setting is_active to false)
   const deleteCustomer = async (id: string) => {
     try {
-      console.log('[deleteCustomer] Starting soft delete for customer:', id);
       setError(null);
       
-      const { data: updatedCustomer, error: deleteError } = await supabase
-        .from('customers')
-        .update({ is_active: false })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedCustomer, error: deleteError } = await db.from('customers').update(id, { is_active: false });
       
-      if (deleteError) {
-        console.error('[deleteCustomer] Database error:', deleteError);
-        throw deleteError;
-      }
-      
-      console.log('[deleteCustomer] Customer soft deleted successfully:', updatedCustomer);
-      
-      // Update local state - remove from customers array since we filter by is_active: true
+      if (deleteError) throw deleteError;
       setCustomers(prev => prev.filter(cust => cust.id !== id));
       
       return updatedCustomer;
     } catch (err) {
-      console.error('[deleteCustomer] Exception:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete customer';
       setError(errorMessage);
       throw err;
@@ -154,17 +135,13 @@ export function useCustomers() {
     if (!activeCompany?.id) return [];
     
     try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', false)
-        .order('customer_code');
+      const { data, error } = await db.from('customers').eq('company_id', activeCompany.id).select('*');
       
       if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('[fetchInactiveCustomers] Error:', err);
+      // Filter inactive customers
+      const inactiveCustomers = (data || []).filter((c: Customer) => c.is_active === false);
+      return inactiveCustomers;
+    } catch {
       return [];
     }
   };
@@ -172,25 +149,13 @@ export function useCustomers() {
   // Reactivate an inactive customer
   const reactivateCustomer = async (id: string) => {
     try {
-      console.log('[reactivateCustomer] Reactivating customer:', id);
-      
-      const { data: updatedCustomer, error } = await supabase
-        .from('customers')
-        .update({ is_active: true })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedCustomer, error } = await db.from('customers').update(id, { is_active: true });
       
       if (error) throw error;
-      
-      console.log('[reactivateCustomer] Customer reactivated:', updatedCustomer);
-      
-      // Refresh customers to include the reactivated one
       await fetchCustomers();
       
       return updatedCustomer;
     } catch (err) {
-      console.error('[reactivateCustomer] Error:', err);
       throw err;
     }
   };
@@ -200,18 +165,20 @@ export function useCustomers() {
     if (!activeCompany?.id || !searchTerm.trim()) return [];
     
     try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', true)
-        .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,customer_code.ilike.%${searchTerm}%`)
-        .order('customer_code');
+      const { data, error } = await db.from('customers').eq('company_id', activeCompany.id).select('*');
       
       if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('[searchCustomers] Error:', err);
+      
+      // Filter active customers and search
+      const filtered = (data || [])
+        .filter((c: Customer) => c.is_active !== false)
+        .filter((c: Customer) => 
+          c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.customer_code?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      return filtered;
+    } catch {
       return [];
     }
   };
@@ -233,24 +200,16 @@ export function useCustomers() {
 
   // Fetch companies when component mounts
   useEffect(() => {
-    console.log('[useCustomers] Component mounted, fetching companies...');
-    fetchCompanies();
+    void fetchCompanies();
   }, [fetchCompanies]);
-
-  // Debug companies data
-  useEffect(() => {
-    console.log('[useCustomers] Companies data changed:', companies);
-    console.log('[useCustomers] Active company:', activeCompany);
-  }, [companies, activeCompany]);
 
   // Initialize customers when company changes
   useEffect(() => {
     if (activeCompany?.id) {
-      console.log('[useCustomers] Company changed, fetching customers for:', activeCompany.id);
-      fetchCustomers();
+      void fetchCustomers();
     } else {
-      console.log('[useCustomers] No active company, clearing customers');
       setCustomers([]);
+      setLoading(false);
     }
   }, [activeCompany?.id]);
 

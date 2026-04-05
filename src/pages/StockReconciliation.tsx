@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { RefreshCw, BarChart3, Package, CheckCircle, AlertTriangle, Save, Calendar, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,7 +37,7 @@ type ReconciliationItem = {
 };
 
 const StockReconciliation = () => {
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
@@ -60,7 +60,6 @@ const StockReconciliation = () => {
     
     try {
       setLoading(true);
-      console.log('🔍 Fetching stock items for company:', activeCompany.id);
       
       const { data, error } = await supabase
         .from('items')
@@ -79,7 +78,7 @@ const StockReconciliation = () => {
         .order('item_code');
 
       if (error) {
-        console.error('❌ Supabase error details:', {
+        console.error('Database error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -88,7 +87,6 @@ const StockReconciliation = () => {
         throw error;
       }
 
-      console.log('📦 Stock items fetched:', data?.length || 0);
       setStockItems(data || []);
       
       // Initialize reconciliation data
@@ -108,7 +106,7 @@ const StockReconciliation = () => {
       
       setReconciliationData(reconciliationItems);
     } catch (error) {
-      console.error('❌ Error fetching stock items:', error);
+      console.error('Error fetching stock items:', error);
       toast({
         title: "Error",
         description: `Failed to fetch stock items: ${error.message || 'Unknown error'}`,
@@ -125,17 +123,11 @@ const StockReconciliation = () => {
   }, [fetchCompanies]);
 
   useEffect(() => {
-    console.log('🏢 Active company check:', { 
-      activeCompany, 
-      companyId: activeCompany?.id, 
-      stateCompanyId: state.activeCompanyId,
-      companies: companies?.length,
-      companiesList: companies?.map(c => ({ id: c.id, name: c.name })),
-      hasCompanies,
-      hasActiveCompany
-    });
     if (hasActiveCompany) {
-      fetchStockItems();
+      void fetchStockItems();
+    } else {
+      setStockItems([]);
+      setReconciliationData([]);
     }
   }, [hasActiveCompany, companies]);
 
@@ -231,13 +223,12 @@ const StockReconciliation = () => {
       }));
       
       // Insert stock movements
-      console.log('📝 Inserting stock movements:', stockMovements);
       const { error: movementError } = await supabase
         .from('stock_movements')
         .insert(stockMovements);
       
       if (movementError) {
-        console.error('❌ Stock movement error details:', {
+        console.error('Stock movement error details:', {
           message: movementError.message,
           details: movementError.details,
           hint: movementError.hint,
@@ -283,7 +274,7 @@ const StockReconciliation = () => {
     if (varianceQty === 0) {
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          ✓ No Change
+          âœ“ No Change
         </Badge>
       );
     } else if (varianceQty > 0) {
@@ -306,7 +297,7 @@ const StockReconciliation = () => {
 
   return (
     <AppLayout title="Stock Reconciliation">
-      <SEO title="Stock Reconciliation — FMS" description="Reconcile physical inventory counts with system records." />
+      <SEO title="Stock Reconciliation â€” FMS" description="Reconcile physical inventory counts with system records." />
       {!hasActiveCompany ? (
         <div className="text-center py-8">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -528,6 +519,9 @@ const StockReconciliation = () => {
 };
 
 export default StockReconciliation;
+
+
+
 
 
 

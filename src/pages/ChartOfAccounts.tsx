@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo, useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Edit, Trash2, Eye, MoreHorizontal, ChevronRight, ChevronDown, Building2 } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 
 type ChartOfAccount = Database['public']['Tables']['chart_of_accounts']['Row'];
 type ChartOfAccountWithChildren = ChartOfAccount & { children: ChartOfAccountWithChildren[] };
@@ -164,13 +164,12 @@ const ChartOfAccounts = () => {
     const accountToDelete = accounts.find(acc => acc.id === id);
     if (!accountToDelete) return;
     
-    const confirmMessage = `Are you sure you want to delete "${accountToDelete.account_name}" (${accountToDelete.account_code})?\n\nThis will:\n• Mark the account as inactive\n• Remove it from the chart of accounts view\n• Preserve any historical data\n\nThis action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete "${accountToDelete.account_name}" (${accountToDelete.account_code})?\n\nThis will:\nâ€¢ Mark the account as inactive\nâ€¢ Remove it from the chart of accounts view\nâ€¢ Preserve any historical data\n\nThis action cannot be undone.`;
     
     if (window.confirm(confirmMessage)) {
       try {
         await deleteAccount(id);
         // Show success message (you can add a toast notification here)
-        console.log("Account deleted successfully");
       } catch (error) {
         console.error("Failed to delete account:", error);
         // The error is already set in the hook, so it will show in the UI
@@ -284,7 +283,7 @@ const ChartOfAccounts = () => {
             <div className="flex items-center justify-between">
               <CardTitle>{view === "add" ? "Add New Account" : "Edit Account"}</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                ← Back to Accounts
+                â†گ Back to Accounts
               </Button>
             </div>
           </CardHeader>
@@ -300,7 +299,7 @@ const ChartOfAccounts = () => {
                   </p>
                   {!accounts.find(a => a.id === parentAccountId)?.is_group && (
                     <p className="text-xs text-red-600 mt-1">
-                      ⚠️ Warning: Parent account is not a group account and cannot have sub-accounts.
+                      âڑ ï¸ڈ Warning: Parent account is not a group account and cannot have sub-accounts.
                     </p>
                   )}
                 </div>
@@ -434,7 +433,7 @@ const ChartOfAccounts = () => {
             <div className="flex items-center justify-between">
               <CardTitle>Account Details</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                ← Back to Accounts
+                â†گ Back to Accounts
               </Button>
             </div>
           </CardHeader>
@@ -668,7 +667,7 @@ const ChartOfAccounts = () => {
 
   return (
     <AppLayout title="Chart of Accounts">
-      <SEO title="Chart of Accounts — FMS" description="Manage your company's chart of accounts with proper hierarchy and account types." />
+      <SEO title="Chart of Accounts â€” FMS" description="Manage your company's chart of accounts with proper hierarchy and account types." />
       
 
       
@@ -678,3 +677,6 @@ const ChartOfAccounts = () => {
 };
 
 export default ChartOfAccounts;
+
+
+

@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/database-client';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAccounting } from '@/state/accounting';
-import type { Database } from '@/lib/supabase';
 
-type ChartOfAccount = Database['public']['Tables']['chart_of_accounts']['Row'];
-type Company = Database['public']['Tables']['companies']['Row'];
+interface ChartOfAccount {
+  id: string;
+  account_code: string;
+  account_name: string;
+  account_type: string;
+  company_id: string;
+  is_active: boolean;
+  [key: string]: any;
+}
 
 export function useChartOfAccounts() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
@@ -25,16 +31,16 @@ export function useChartOfAccounts() {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
-        .from('chart_of_accounts')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', true)  // Only fetch active accounts
-        .order('account_code');
+      const { data, error: fetchError } = await db.from('chart_of_accounts').eq('company_id', activeCompany.id).select('*');
       
       if (fetchError) throw fetchError;
       
-      setAccounts(data || []);
+      // Filter active accounts and sort by account_code
+      const activeAccounts = (data || [])
+        .filter((a: ChartOfAccount) => a.is_active !== false)
+        .sort((a: ChartOfAccount, b: ChartOfAccount) => a.account_code.localeCompare(b.account_code));
+      
+      setAccounts(activeAccounts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch accounts');
     } finally {
@@ -47,48 +53,30 @@ export function useChartOfAccounts() {
     if (!activeCompany?.id) return;
     
     try {
-      console.log('[createDefaultAccounts] Starting for company:', activeCompany.id);
       setLoading(true);
       setError(null);
       
       // Check if accounts already exist
-      const { data: existingAccounts, error: checkError } = await supabase
-        .from('chart_of_accounts')
-        .select('id')
-        .eq('company_id', activeCompany.id)
-        .limit(1);
+      const { data: existingAccounts, error: checkError } = await db.from('chart_of_accounts').eq('company_id', activeCompany.id).select('*');
       
       if (checkError) {
-        console.error('[createDefaultAccounts] Error checking existing accounts:', checkError);
+        throw checkError;
       }
       
-      console.log('[createDefaultAccounts] Existing accounts found:', existingAccounts?.length || 0);
-      
       if (existingAccounts && existingAccounts.length > 0) {
-        // Accounts already exist, just fetch them
-        console.log('[createDefaultAccounts] Accounts already exist, fetching...');
         await fetchAccounts();
         return;
       }
       
-      // Call the database function to create default accounts
-      console.log('[createDefaultAccounts] Calling create_default_chart_of_accounts function...');
-      const { error: createError } = await supabase.rpc(
-        'create_default_chart_of_accounts',
-        { company_uuid: activeCompany.id }
-      );
-      
-      if (createError) {
-        console.error('[createDefaultAccounts] Error creating default accounts:', createError);
-        throw createError;
+      const defaultAccounts = buildDefaultAccounts(activeCompany.id);
+      for (const account of defaultAccounts) {
+        const { error: createError } = await db.from('chart_of_accounts').insert(account);
+        if (createError) {
+          throw createError;
+        }
       }
-      
-      console.log('[createDefaultAccounts] Default accounts created successfully');
-      
-      // Fetch the newly created accounts
       await fetchAccounts();
     } catch (err) {
-      console.error('[createDefaultAccounts] Exception:', err);
       setError(err instanceof Error ? err.message : 'Failed to create default accounts');
     } finally {
       setLoading(false);
@@ -102,15 +90,13 @@ export function useChartOfAccounts() {
     try {
       setError(null);
       
-      const { data, error: insertError } = await supabase
-        .from('chart_of_accounts')
-        .insert([{ ...account, company_id: activeCompany.id }])
-        .select()
-        .single();
+      const { data, error: insertError } = await db.from('chart_of_accounts').insert({ ...account, company_id: activeCompany.id });
       
       if (insertError) throw insertError;
       
-      setAccounts(prev => [...prev, data]);
+      if (data) {
+        setAccounts(prev => [...prev, data as ChartOfAccount]);
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add account');
@@ -123,16 +109,13 @@ export function useChartOfAccounts() {
     try {
       setError(null);
       
-      const { data, error: updateError } = await supabase
-        .from('chart_of_accounts')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error: updateError } = await db.from('chart_of_accounts').update(id, updates);
       
       if (updateError) throw updateError;
       
-      setAccounts(prev => prev.map(acc => acc.id === id ? data : acc));
+      if (data) {
+        setAccounts(prev => prev.map(acc => acc.id === id ? data as ChartOfAccount : acc));
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update account');
@@ -143,7 +126,6 @@ export function useChartOfAccounts() {
   // Delete an account (soft delete by setting is_active to false)
   const deleteAccount = async (id: string) => {
     try {
-      console.log('[deleteAccount] Starting soft delete for account:', id);
       setError(null);
       
       // First, check if the account exists and can be deleted
@@ -168,29 +150,15 @@ export function useChartOfAccounts() {
         throw new Error('Cannot delete account with sub-accounts. Please delete sub-accounts first.');
       }
       
-      console.log('[deleteAccount] Proceeding with soft delete...');
-      
-      const { data: updatedAccount, error: deleteError } = await supabase
-        .from('chart_of_accounts')
-        .update({ is_active: false })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedAccount, error: deleteError } = await db.from('chart_of_accounts').update(id, { is_active: false });
       
       if (deleteError) {
-        console.error('[deleteAccount] Database error:', deleteError);
         throw deleteError;
       }
-      
-      console.log('[deleteAccount] Account soft deleted successfully:', updatedAccount);
-      console.log('[deleteAccount] Account is now inactive in database but preserved for history');
-      
-      // Update local state - remove from accounts array since we filter by is_active: true
       setAccounts(prev => prev.filter(acc => acc.id !== id));
       
       return updatedAccount;
     } catch (err) {
-      console.error('[deleteAccount] Exception:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete account';
       setError(errorMessage);
       throw err;
@@ -226,19 +194,6 @@ export function useChartOfAccounts() {
       }
     });
     
-    // Debug logging
-    console.log('[getAccountHierarchy] Total accounts:', accounts.length);
-    console.log('[getAccountHierarchy] Root accounts found:', rootAccounts.length);
-    rootAccounts.forEach(root => {
-      console.log(`[getAccountHierarchy] Root: ${root.account_code} - ${root.account_name} (${root.children.length} children)`);
-      root.children.forEach(child => {
-        console.log(`  - Child: ${child.account_code} - ${child.account_name} (${child.children.length} children)`);
-        child.children.forEach(grandchild => {
-          console.log(`    - Grandchild: ${grandchild.account_code} - ${grandchild.account_name}`);
-        });
-      });
-    });
-    
     return rootAccounts;
   };
 
@@ -270,25 +225,16 @@ export function useChartOfAccounts() {
 
   // Fetch companies when component mounts
   useEffect(() => {
-    console.log('[useChartOfAccounts] Component mounted, fetching companies...');
-    fetchCompanies();
+    void fetchCompanies();
   }, [fetchCompanies]);
-
-  // Debug companies data
-  useEffect(() => {
-    console.log('[useChartOfAccounts] Companies data changed:', companies);
-    console.log('[useChartOfAccounts] Active company:', activeCompany);
-  }, [companies, activeCompany]);
 
   // Initialize accounts when company changes
   useEffect(() => {
-    console.log('[useChartOfAccounts] Company changed:', activeCompany);
-    console.log('[useChartOfAccounts] Active company ID from state:', state.activeCompanyId);
     if (activeCompany?.id) {
-      console.log('[useChartOfAccounts] Creating default accounts for company:', activeCompany.id);
-      createDefaultAccounts();
+      void createDefaultAccounts();
     } else {
-      console.log('[useChartOfAccounts] No active company or company ID');
+      setAccounts([]);
+      setLoading(false);
     }
   }, [activeCompany?.id, state.activeCompanyId]);
 
@@ -297,17 +243,13 @@ export function useChartOfAccounts() {
     if (!activeCompany?.id) return [];
     
     try {
-      const { data, error } = await supabase
-        .from('chart_of_accounts')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', false)
-        .order('account_code');
+      const { data, error } = await db.from('chart_of_accounts').eq('company_id', activeCompany.id).select('*');
       
       if (error) throw error;
-      return data || [];
+      return (data || [])
+        .filter((account: ChartOfAccount) => account.is_active === false)
+        .sort((a: ChartOfAccount, b: ChartOfAccount) => a.account_code.localeCompare(b.account_code));
     } catch (err) {
-      console.error('[fetchInactiveAccounts] Error:', err);
       return [];
     }
   };
@@ -315,25 +257,13 @@ export function useChartOfAccounts() {
   // Reactivate an inactive account
   const reactivateAccount = async (id: string) => {
     try {
-      console.log('[reactivateAccount] Reactivating account:', id);
-      
-      const { data: updatedAccount, error } = await supabase
-        .from('chart_of_accounts')
-        .update({ is_active: true })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedAccount, error } = await db.from('chart_of_accounts').update(id, { is_active: true });
       
       if (error) throw error;
-      
-      console.log('[reactivateAccount] Account reactivated:', updatedAccount);
-      
-      // Refresh accounts to include the reactivated one
       await fetchAccounts();
       
       return updatedAccount;
     } catch (err) {
-      console.error('[reactivateAccount] Error:', err);
       throw err;
     }
   };
@@ -341,24 +271,23 @@ export function useChartOfAccounts() {
   // Manual trigger to create accounts for a specific company
   const createAccountsForCompany = async (companyId: string) => {
     try {
-      console.log('[createAccountsForCompany] Creating accounts for company:', companyId);
       setLoading(true);
       setError(null);
       
-      const { error: createError } = await supabase.rpc(
-        'create_default_chart_of_accounts',
-        { company_uuid: companyId }
-      );
-      
-      if (createError) {
-        console.error('[createAccountsForCompany] Error:', createError);
-        throw createError;
+      const existingAccounts = await db.from('chart_of_accounts').eq('company_id', companyId).select('*');
+      if (existingAccounts.error) {
+        throw existingAccounts.error;
       }
-      
-      console.log('[createAccountsForCompany] Success!');
+      if ((existingAccounts.data || []).length === 0) {
+        for (const account of buildDefaultAccounts(companyId)) {
+          const result = await db.from('chart_of_accounts').insert(account);
+          if (result.error) {
+            throw result.error;
+          }
+        }
+      }
       await fetchAccounts();
     } catch (err) {
-      console.error('[createAccountsForCompany] Exception:', err);
       setError(err instanceof Error ? err.message : 'Failed to create accounts');
     } finally {
       setLoading(false);
@@ -386,4 +315,27 @@ export function useChartOfAccounts() {
     getGroupAccounts,
     getNonGroupAccounts,
   };
+}
+
+function buildDefaultAccounts(companyId: string) {
+  const assetId = crypto.randomUUID();
+  const liabilityId = crypto.randomUUID();
+  const equityId = crypto.randomUUID();
+  const revenueId = crypto.randomUUID();
+  const expenseId = crypto.randomUUID();
+
+  return [
+    { id: assetId, account_code: '1000', account_name: 'Assets', account_type: 'Asset', parent_account_id: null, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Root assets account', is_group: true },
+    { id: crypto.randomUUID(), account_code: '1100', account_name: 'Cash', account_type: 'Asset', parent_account_id: assetId, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Cash account', is_group: false },
+    { id: crypto.randomUUID(), account_code: '1200', account_name: 'Accounts Receivable', account_type: 'Asset', parent_account_id: assetId, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Customer receivables', is_group: false },
+    { id: crypto.randomUUID(), account_code: '1300', account_name: 'Inventory', account_type: 'Asset', parent_account_id: assetId, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Inventory on hand', is_group: false },
+    { id: liabilityId, account_code: '2000', account_name: 'Liabilities', account_type: 'Liability', parent_account_id: null, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Root liabilities account', is_group: true },
+    { id: crypto.randomUUID(), account_code: '2100', account_name: 'Accounts Payable', account_type: 'Liability', parent_account_id: liabilityId, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Supplier payables', is_group: false },
+    { id: equityId, account_code: '3000', account_name: 'Equity', account_type: 'Equity', parent_account_id: null, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Root equity account', is_group: true },
+    { id: crypto.randomUUID(), account_code: '3100', account_name: 'Owner Equity', account_type: 'Equity', parent_account_id: equityId, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Owner equity', is_group: false },
+    { id: revenueId, account_code: '4000', account_name: 'Revenue', account_type: 'Revenue', parent_account_id: null, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Root revenue account', is_group: true },
+    { id: crypto.randomUUID(), account_code: '4100', account_name: 'Sales Revenue', account_type: 'Revenue', parent_account_id: revenueId, company_id: companyId, is_active: true, normal_balance: 'CREDIT', description: 'Sales income', is_group: false },
+    { id: expenseId, account_code: '5000', account_name: 'Expenses', account_type: 'Expense', parent_account_id: null, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Root expense account', is_group: true },
+    { id: crypto.randomUUID(), account_code: '5100', account_name: 'Operating Expenses', account_type: 'Expense', parent_account_id: expenseId, company_id: companyId, is_active: true, normal_balance: 'DEBIT', description: 'Operating costs', is_group: false },
+  ];
 }

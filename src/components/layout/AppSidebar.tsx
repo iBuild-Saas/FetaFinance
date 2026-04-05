@@ -1,247 +1,218 @@
-import { Building2, ShoppingCart, TrendingUp, Package, Users, FileText, Calculator, BarChart3, Plus, BookOpen, ChevronRight, FolderOpen, Ruler, Settings, DollarSign, CreditCard } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  Building2,
+  ChevronRight,
+  ClipboardList,
+  Package,
+  Receipt,
+  Settings,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { useActiveCompany } from "@/state/accounting";
+import { BrandLockup } from "./BrandLockup";
 
-const getModules = (t: any) => [
+const getModules = (t: TFunction) => [
   {
-    id: "setup",
-    title: t("navigation.setup"),
+    id: "overview",
+    title: t("navigation.overview"),
     icon: Building2,
     docs: [
-      { title: t("modules.companies"), path: "/companies", icon: Building2 },
-      { title: t("modules.chartOfAccounts"), path: "/accounts", icon: Calculator },
-      { title: t("modules.accountMappings"), path: "/account-mappings", icon: Settings },
-    ]
-  },
-  {
-    id: "master-data",
-    title: t("navigation.masterData"), 
-    icon: Users,
-    docs: [
-      { title: t("modules.customers"), path: "/customers", icon: Users },
-      { title: t("modules.suppliers"), path: "/suppliers", icon: Building2 },
-      { title: t("modules.items"), path: "/items", icon: Package },
-      { title: t("modules.categories"), path: "/categories", icon: FolderOpen },
-      { title: t("modules.unitsOfMeasure"), path: "/units-of-measure", icon: Ruler },
-      { title: t("modules.paymentMethods"), path: "/payment-methods", icon: Calculator },
-    ]
+      { title: t("shell.controlCenter"), path: "/overview" },
+      { title: t("shell.auditLog"), path: "/audit-log" },
+    ],
   },
   {
     id: "sales",
-    title: t("navigation.selling"),
+    title: t("navigation.sales"),
     icon: TrendingUp,
     docs: [
-      { title: t("modules.salesInvoices"), path: "/invoices", icon: FileText },
-    ]
+      { title: t("modules.salesInvoices"), path: "/invoices" },
+      { title: t("modules.accountsReceivable"), path: "/accounts-receivable" },
+      { title: t("modules.customers"), path: "/customers" },
+    ],
   },
   {
-    id: "purchase",
-    title: t("navigation.buying"), 
+    id: "purchasing",
+    title: t("navigation.purchasing"),
     icon: ShoppingCart,
     docs: [
-      { title: t("modules.purchaseInvoices"), path: "/purchase-invoices", icon: ShoppingCart },
-    ]
-  },
-  {
-    id: "payments",
-    title: t("navigation.payments"),
-    icon: TrendingUp,
-    docs: [
-      { title: t("modules.payments"), path: "/payments", icon: TrendingUp },
-    ]
+      { title: t("modules.purchaseInvoices"), path: "/purchase-invoices" },
+      { title: t("modules.accountsPayable"), path: "/accounts-payable" },
+      { title: t("modules.suppliers"), path: "/suppliers" },
+    ],
   },
   {
     id: "inventory",
     title: t("navigation.inventory"),
     icon: Package,
     docs: [
-      { title: t("modules.items"), path: "/items", icon: Package },
-      { title: t("modules.inventoryManagement"), path: "/inventory", icon: Package },
-      { title: t("modules.stockBalance"), path: "/stock-balance", icon: BarChart3 },
-      { title: t("modules.stockReconciliation"), path: "/stock-reconciliation", icon: TrendingUp },
-    ]
+      { title: t("modules.items"), path: "/items" },
+      { title: t("modules.inventoryManagement"), path: "/inventory" },
+      { title: t("modules.stockBalance"), path: "/stock-balance" },
+      { title: t("modules.stockReconciliation"), path: "/stock-reconciliation" },
+    ],
   },
   {
     id: "accounting",
     title: t("navigation.accounting"),
-    icon: Calculator,
+    icon: BookOpen,
     docs: [
-      { title: t("modules.journalEntries"), path: "/journals", icon: BookOpen },
-      { title: t("modules.generalLedger"), path: "/ledger", icon: Calculator },
-    ]
+      { title: t("modules.journalEntries"), path: "/journals" },
+      { title: t("modules.generalLedger"), path: "/ledger" },
+      { title: t("modules.payments"), path: "/payments" },
+      { title: t("modules.accountMappings"), path: "/account-mappings" },
+    ],
   },
   {
     id: "reports",
     title: t("navigation.reports"),
     icon: BarChart3,
     docs: [
-      { title: t("modules.financialReports"), path: "/reports", icon: BarChart3 },
-      { title: t("modules.trialBalance"), path: "/trial-balance", icon: Calculator },
-      { title: "Accounts Receivable", path: "/accounts-receivable", icon: DollarSign },
-      { title: "Accounts Payable", path: "/accounts-payable", icon: CreditCard },
-    ]
-  }
+      { title: t("shell.reportsHub"), path: "/reports" },
+      { title: t("modules.trialBalance"), path: "/trial-balance" },
+      { title: t("shell.auditLog"), path: "/audit-log" },
+    ],
+  },
+  {
+    id: "settings",
+    title: t("common.settings"),
+    icon: Settings,
+    docs: [
+      { title: t("modules.companies"), path: "/companies" },
+      { title: t("company.companySettings"), path: "/company-settings" },
+      { title: t("modules.chartOfAccounts"), path: "/accounts" },
+      { title: t("modules.categories"), path: "/categories" },
+      { title: t("modules.unitsOfMeasure"), path: "/units-of-measure" },
+      { title: t("modules.paymentMethods"), path: "/payment-methods" },
+    ],
+  },
 ];
 
 export function AppSidebar() {
   const { open: sidebarOpen } = useSidebar();
   const location = useLocation();
-  const activeCompany = useActiveCompany();
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
-  const [openModules, setOpenModules] = useState<string[]>(["setup"]);
-  
+  const [openModules, setOpenModules] = useState<string[]>(["overview", "sales"]);
+
   const modules = getModules(t);
+  const sidebarWidth = sidebarOpen ? "16rem" : "5rem";
 
   const toggleModule = (moduleId: string) => {
-    setOpenModules(prev => 
-      prev.includes(moduleId) 
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
-    );
+    setOpenModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]));
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isModuleActive = (moduleId: string) => 
-    modules.find(m => m.id === moduleId)?.docs.some(doc => isActive(doc.path));
+  const isModuleActive = (moduleId: string) => modules.find((module) => module.id === moduleId)?.docs.some((doc) => isActive(doc.path));
 
   return (
-    <Sidebar 
-      variant="inset"
-      collapsible="none"
+    <aside
       className={cn(
-        "bg-background transition-all duration-300 relative",
-        isRTL ? "border-l border-border" : "border-r border-border"
+        "sidebar-surface fixed bottom-0 top-20 z-30 hidden overflow-hidden md:block",
+        isRTL ? "right-0 border-l" : "left-0 border-r",
       )}
+      style={{ width: sidebarWidth }}
     >
-      <SidebarContent className="p-4">
-        {/* Logo Section */}
-        <div className="px-2 py-4 mb-6">
-          <Link to="/" className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-2 hover:bg-muted transition-colors">
-            {activeCompany?.logo ? (
-              <img 
-                src={activeCompany.logo} 
-                alt={`${activeCompany.name} Logo`}
-                className="w-8 h-8 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary-foreground" />
-              </div>
+      <div className="h-full overflow-y-auto overflow-x-hidden px-3 py-4">
+        <div className="mb-4 px-1">
+          <Link
+            to="/companies"
+            className={cn(
+              "flex items-center rounded-2xl border border-white/10 bg-white/5 p-2.5 text-sidebar-foreground transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sidebar-ring",
+              sidebarOpen ? "gap-3" : "justify-center",
             )}
+          >
+            <div className="sidebar-brand-mark flex h-10 w-10 items-center justify-center rounded-2xl">
+              <Building2 className="h-5 w-5 text-sidebar-primary-foreground" />
+            </div>
+
             {sidebarOpen && (
-              <div>
-                <span className="font-semibold text-lg text-foreground">
-                  {activeCompany?.name || "FinanceHub"}
-                </span>
-              </div>
+              <BrandLockup className="min-w-0" />
             )}
           </Link>
         </div>
 
-        {/* Navigation Modules */}
-        {modules.map((module) => {
-          const IconComponent = module.icon;
-          const isExpanded = openModules.includes(module.id);
-          const moduleActive = isModuleActive(module.id);
+        <div className="space-y-1">
+          {modules.map((module) => {
+            const IconComponent = module.icon;
+            const isExpanded = openModules.includes(module.id);
+            const moduleActive = Boolean(isModuleActive(module.id));
 
-          return (
-            <SidebarGroup key={module.id}>
-              <Collapsible 
-                open={isExpanded} 
-                onOpenChange={() => toggleModule(module.id)}
-              >
-                <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel 
-                    className={cn(
-                      "group flex items-center gap-3 px-3 py-3 mb-1 rounded-lg cursor-pointer transition-colors hover:bg-muted",
-                      moduleActive && "bg-primary text-primary-foreground"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-6 h-6 rounded-md flex items-center justify-center",
-                      moduleActive ? "bg-primary-foreground/20" : "bg-muted"
-                    )}>
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                    {sidebarOpen && (
-                      <>
-                        <span className="font-medium text-sm">{module.title}</span>
-                        <ChevronRight 
-                          className={cn(
-                            "w-4 h-4 transition-transform",
-                            isRTL ? "mr-auto" : "ml-auto",
-                            isExpanded && "rotate-90",
-                            isRTL && "rotate-180"
-                          )} 
-                        />
-                      </>
-                    )}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
+            return (
+              <div key={module.id} className="px-1 py-1">
+                <Collapsible open={isExpanded} onOpenChange={() => toggleModule(module.id)}>
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      title={module.title}
+                      className={cn(
+                        "sidebar-group-button flex w-full items-center rounded-2xl px-3 text-sidebar-foreground transition-colors",
+                        sidebarOpen ? "h-12 gap-3" : "h-12 justify-center",
+                        moduleActive && "bg-sidebar-primary/90",
+                      )}
+                    >
+                      <IconComponent className="h-4 w-4 shrink-0" />
+                      {sidebarOpen && (
+                        <>
+                          <span className={cn("flex-1 truncate text-sm font-medium", isRTL ? "text-right" : "text-left")}>{module.title}</span>
+                          <ChevronRight
+                            className={cn(
+                              "h-4 w-4 transition-transform",
+                              isRTL ? "rotate-180" : "",
+                              isExpanded && (isRTL ? "-rotate-90" : "rotate-90"),
+                            )}
+                          />
+                        </>
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
 
-                {sidebarOpen && (
-                  <CollapsibleContent>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
+                  {sidebarOpen && (
+                    <CollapsibleContent className="pt-2">
+                      <div className="space-y-2">
                         {module.docs.map((doc) => {
-                          const DocIcon = doc.icon;
                           const active = isActive(doc.path);
-                          
+
                           return (
-                            <SidebarMenuItem key={doc.path}>
-                              <SidebarMenuButton asChild>
-                                <NavLink
-                                  to={doc.path}
-                                  className={cn(
-                                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors hover:bg-muted",
-                                    isRTL ? "mr-4" : "ml-4",
-                                    active && cn(
-                                      "bg-primary/10 text-primary font-medium",
-                                      isRTL ? "border-r-2 border-primary" : "border-l-2 border-primary"
-                                    )
-                                  )}
-                                >
-                                  <div className={cn(
-                                    "w-5 h-5 rounded flex items-center justify-center",
-                                    active ? "bg-primary/20" : "bg-muted"
-                                  )}>
-                                    <DocIcon className="w-3 h-3" />
-                                  </div>
-                                  <span>{doc.title}</span>
-                                </NavLink>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            <NavLink
+                              key={doc.path}
+                              to={doc.path}
+                              data-active={active}
+                              className={cn(
+                                "sidebar-subitem flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors",
+                                isRTL ? "mr-3" : "ml-3",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "h-2.5 w-2.5 rounded-full border border-white/20 transition-colors",
+                                  active ? "bg-sidebar-primary border-transparent shadow-[0_0_0_4px_rgba(255,255,255,0.05)]" : "bg-white/20",
+                                )}
+                              />
+                              <span className="truncate">{doc.title}</span>
+                            </NavLink>
                           );
                         })}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </CollapsibleContent>
-                )}
-              </Collapsible>
-            </SidebarGroup>
-          );
-        })}
-      </SidebarContent>
-    </Sidebar>
+                      </div>
+                    </CollapsibleContent>
+                  )}
+                </Collapsible>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </aside>
   );
 }

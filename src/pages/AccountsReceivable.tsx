@@ -1,27 +1,24 @@
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useAccounting } from "@/state/accounting";
 import { useDatabase } from "@/hooks/useDatabase";
-import { useToast } from "@/hooks/use-toast";
-import { FileText, DollarSign, Calendar, User } from "lucide-react";
+import { Calendar, CreditCard, FileText, RefreshCw, User } from "lucide-react";
 
 type CustomerReceivable = {
   customer_id: string;
   customer_name: string;
   email?: string;
-  phone?: string;
-  account_code: string;
-  account_name: string;
+  account_code?: string;
+  account_name?: string;
   reference_document_type?: string;
-  reference_document_id?: string;
   entry_date: string;
   due_date?: string;
-  description?: string;
   reference?: string;
   balance: number;
   aging_bucket: string;
@@ -39,315 +36,199 @@ type CustomerReceivableAging = {
   total_balance: number;
 };
 
+const money = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value || 0);
+
 const AccountsReceivable = () => {
-  const { supabase } = useSupabase();
-  const { toast } = useToast();
-  const { data: companies } = useDatabase('companies');
+  const { t, i18n } = useTranslation();
+  const { supabase } = useDatabaseContext();
+  const { data: companies } = useDatabase("companies");
   const { state } = useAccounting();
-  
-  const activeCompany = companies?.find(c => c.id === state.activeCompanyId) || null;
-  
+  const locale = i18n.language === "ar" ? "ar" : "en-US";
+
+  const activeCompany = useMemo(
+    () => companies?.find((company) => company.id === state.activeCompanyId) || null,
+    [companies, state.activeCompanyId],
+  );
+
+  const [view, setView] = useState<"aging" | "detail">("aging");
+  const [loading, setLoading] = useState(false);
   const [receivables, setReceivables] = useState<CustomerReceivable[]>([]);
   const [agingSummary, setAgingSummary] = useState<CustomerReceivableAging[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<'detail' | 'aging'>('aging');
 
-  // Fetch customer receivables
-  const fetchReceivables = async () => {
-    if (!activeCompany?.id) return;
-    
-    try {
-      setLoading(true);
-      
-      console.log('🔍 Fetching customer receivables for company:', activeCompany.id);
-      
-      const { data, error } = await supabase
-        .from('customer_receivables')
-        .select('*')
-        .order('customer_name', { ascending: true });
-      
-      console.log('📊 Customer receivables result:', { data, error });
-      
-      if (error) throw error;
-      
-      setReceivables(data || []);
-    } catch (err) {
-      console.error('Error fetching receivables:', err);
-      toast({
-        title: "Error",
-        description: `Failed to fetch accounts receivable: ${err.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const loadData = async () => {
+    if (!activeCompany?.id) {
+      setReceivables([]);
+      setAgingSummary([]);
+      return;
     }
-  };
 
-  // Fetch aging summary
-  const fetchAgingSummary = async () => {
-    if (!activeCompany?.id) return;
-    
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      console.log('🔍 Fetching customer aging summary for company:', activeCompany.id);
-      
-      const { data, error } = await supabase
-        .from('customer_receivables_aging')
-        .select('*')
-        .order('total_balance', { ascending: false });
-      
-      console.log('📊 Customer aging summary result:', { data, error });
-      
-      if (error) throw error;
-      
-      setAgingSummary(data || []);
-    } catch (err) {
-      console.error('Error fetching aging summary:', err);
-      toast({
-        title: "Error",
-        description: `Failed to fetch aging summary: ${err.message}`,
-        variant: "destructive",
-      });
+      const [detailResult, agingResult] = await Promise.all([
+        supabase.from("customer_receivables").select("*").eq("company_id", activeCompany.id).order("days_overdue", { ascending: false }),
+        supabase.from("customer_receivables_aging").select("*").eq("company_id", activeCompany.id).order("total_balance", { ascending: false }),
+      ]);
+
+      setReceivables((detailResult.data || []) as CustomerReceivable[]);
+      setAgingSummary((agingResult.data || []) as CustomerReceivableAging[]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (activeCompany?.id) {
-      // First check if we have any journal entry lines with party data
-      checkJournalEntryLines();
-      fetchReceivables();
-      fetchAgingSummary();
-    }
+    void loadData();
   }, [activeCompany?.id]);
 
-  // Check if journal entry lines have party data
-  const checkJournalEntryLines = async () => {
-    try {
-      console.log('🔍 Checking journal entry lines for party data...');
-      
-      const { data, error } = await supabase
-        .from('journal_entry_lines')
-        .select('id, party_type, customer_id, supplier_id')
-        .not('party_type', 'is', null)
-        .limit(5);
-      
-      console.log('📊 Journal entry lines with party data:', { data, error });
-      
-      if (!error && data?.length === 0) {
-        console.log('⚠️ No journal entry lines with party data found');
-      }
-    } catch (err) {
-      console.error('Error checking journal entry lines:', err);
-    }
-  };
-
-  const totalReceivables = agingSummary.reduce((sum, item) => sum + item.total_balance, 0);
+  const totalReceivables = agingSummary.reduce((sum, row) => sum + Number(row.total_balance || 0), 0);
+  const overdueReceivables = agingSummary.reduce(
+    (sum, row) => sum + Number(row.days_1_30 || 0) + Number(row.days_31_60 || 0) + Number(row.days_61_90 || 0) + Number(row.over_90_days || 0),
+    0,
+  );
 
   return (
-    <AppLayout title="Accounts Receivable">
-      <SEO title="Accounts Receivable — FinanceHub" description="Track customer receivables and aging" />
-      
+    <AppLayout title={t("accountsReceivable.title")}>
+      <SEO title={`${t("accountsReceivable.title")} - FinanceHub`} description={t("accountsReceivable.description")} />
+
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Accounts Receivable</h1>
-            <p className="text-muted-foreground">Track customer balances and aging</p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant={view === 'aging' ? 'default' : 'outline'} 
-              onClick={() => setView('aging')}
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Aging Summary
-            </Button>
-            <Button 
-              variant={view === 'detail' ? 'default' : 'outline'} 
-              onClick={() => setView('detail')}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Detail Report
-            </Button>
-          </div>
+        <Card>
+          <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{activeCompany?.name || t("company.selectCompany")}</Badge>
+                <Badge variant="outline">{t("accountsReceivable.badge")}</Badge>
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em]">{t("accountsReceivable.heroTitle")}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t("accountsReceivable.heroDescription")}</p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant={view === "aging" ? "default" : "outline"} onClick={() => setView("aging")}>
+                <Calendar className="mr-2 h-4 w-4" />
+                {t("accountsReceivable.aging")}
+              </Button>
+              <Button variant={view === "detail" ? "default" : "outline"} onClick={() => setView("detail")}>
+                <FileText className="mr-2 h-4 w-4" />
+                {t("accountsReceivable.detail")}
+              </Button>
+              <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {t("common.refresh")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <SummaryCard title={t("accountsReceivable.totalReceivables")} value={money(totalReceivables, locale)} icon={CreditCard} />
+          <SummaryCard title={t("accountsReceivable.overdueBalance")} value={money(overdueReceivables, locale)} icon={Calendar} />
+          <SummaryCard title={t("accountsReceivable.openCustomers")} value={String(agingSummary.length)} icon={User} />
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Receivables</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalReceivables.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current</CardTitle>
-              <Calendar className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                ${agingSummary.reduce((sum, item) => sum + item.current_amount, 0).toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">1-30 Days</CardTitle>
-              <Calendar className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                ${agingSummary.reduce((sum, item) => sum + item.days_1_30, 0).toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Over 30 Days</CardTitle>
-              <Calendar className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                ${agingSummary.reduce((sum, item) => sum + item.days_31_60 + item.days_61_90 + item.over_90_days, 0).toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Aging Summary View */}
-        {view === 'aging' && (
+        {view === "aging" ? (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Customer Aging Summary
-              </CardTitle>
+              <CardTitle>{t("accountsReceivable.agingSummary")}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2 font-medium">Customer</th>
-                      <th className="text-right p-2 font-medium">Current</th>
-                      <th className="text-right p-2 font-medium">1-30 Days</th>
-                      <th className="text-right p-2 font-medium">31-60 Days</th>
-                      <th className="text-right p-2 font-medium">61-90 Days</th>
-                      <th className="text-right p-2 font-medium">Over 90 Days</th>
-                      <th className="text-right p-2 font-medium">Total Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agingSummary.map((customer) => (
-                      <tr key={customer.customer_id} className="border-b hover:bg-muted/50">
-                        <td className="p-2 font-medium">{customer.customer_name}</td>
-                        <td className="p-2 text-right text-green-600">
-                          ${customer.current_amount.toFixed(2)}
-                        </td>
-                        <td className="p-2 text-right text-yellow-600">
-                          ${customer.days_1_30.toFixed(2)}
-                        </td>
-                        <td className="p-2 text-right text-orange-600">
-                          ${customer.days_31_60.toFixed(2)}
-                        </td>
-                        <td className="p-2 text-right text-red-600">
-                          ${customer.days_61_90.toFixed(2)}
-                        </td>
-                        <td className="p-2 text-right text-red-700 font-medium">
-                          ${customer.over_90_days.toFixed(2)}
-                        </td>
-                        <td className="p-2 text-right font-bold">
-                          ${customer.total_balance.toFixed(2)}
-                        </td>
+            <CardContent className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="p-2 text-left font-medium">{t("accountsReceivable.customer")}</th>
+                    <th className="p-2 text-right font-medium">{t("accountsReceivable.current")}</th>
+                    <th className="p-2 text-right font-medium">1-30</th>
+                    <th className="p-2 text-right font-medium">31-60</th>
+                    <th className="p-2 text-right font-medium">61-90</th>
+                    <th className="p-2 text-right font-medium">90+</th>
+                    <th className="p-2 text-right font-medium">{t("common.total")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!activeCompany ? (
+                    <EmptyRow colSpan={7} text={t("accountsReceivable.selectCompany")} />
+                  ) : loading ? (
+                    <EmptyRow colSpan={7} text={t("accountsReceivable.loadingSummary")} />
+                  ) : agingSummary.length === 0 ? (
+                    <EmptyRow colSpan={7} text={t("accountsReceivable.noSummary")} />
+                  ) : (
+                    agingSummary.map((row) => (
+                      <tr key={row.customer_id} className="border-b hover:bg-muted/50">
+                        <td className="p-2 font-medium">{row.customer_name}</td>
+                        <td className="p-2 text-right">{money(row.current_amount, locale)}</td>
+                        <td className="p-2 text-right">{money(row.days_1_30, locale)}</td>
+                        <td className="p-2 text-right">{money(row.days_31_60, locale)}</td>
+                        <td className="p-2 text-right">{money(row.days_61_90, locale)}</td>
+                        <td className="p-2 text-right">{money(row.over_90_days, locale)}</td>
+                        <td className="p-2 text-right font-semibold">{money(row.total_balance, locale)}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </CardContent>
           </Card>
-        )}
-
-        {/* Detail View */}
-        {view === 'detail' && (
+        ) : (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Detailed Receivables
-              </CardTitle>
+              <CardTitle>{t("accountsReceivable.openReceivableDetail")}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2 font-medium">Customer</th>
-                      <th className="text-left p-2 font-medium">Account</th>
-                      <th className="text-left p-2 font-medium">Reference</th>
-                      <th className="text-left p-2 font-medium">Entry Date</th>
-                      <th className="text-left p-2 font-medium">Due Date</th>
-                      <th className="text-left p-2 font-medium">Aging</th>
-                      <th className="text-right p-2 font-medium">Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {receivables.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-muted/50">
+            <CardContent className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="p-2 text-left font-medium">{t("accountsReceivable.customer")}</th>
+                    <th className="p-2 text-left font-medium">{t("accountsReceivable.reference")}</th>
+                    <th className="p-2 text-left font-medium">{t("accountsReceivable.dates")}</th>
+                    <th className="p-2 text-left font-medium">{t("accountsReceivable.aging")}</th>
+                    <th className="p-2 text-right font-medium">{t("accountsReceivable.balance")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!activeCompany ? (
+                    <EmptyRow colSpan={5} text={t("accountsReceivable.selectDetail")} />
+                  ) : loading ? (
+                    <EmptyRow colSpan={5} text={t("accountsReceivable.loadingDetail")} />
+                  ) : receivables.length === 0 ? (
+                    <EmptyRow colSpan={5} text={t("accountsReceivable.noDetail")} />
+                  ) : (
+                    receivables.map((row, index) => (
+                      <tr key={`${row.customer_id}-${row.reference}-${index}`} className="border-b hover:bg-muted/50">
                         <td className="p-2">
-                          <div>
-                            <div className="font-medium">{item.customer_name}</div>
-                            {item.email && <div className="text-sm text-muted-foreground">{item.email}</div>}
-                          </div>
+                          <div className="font-medium">{row.customer_name}</div>
+                          {row.email && <div className="text-sm text-muted-foreground">{row.email}</div>}
                         </td>
                         <td className="p-2">
-                          <div className="text-sm">
-                            <div>{item.account_code}</div>
-                            <div className="text-muted-foreground">{item.account_name}</div>
-                          </div>
-                        </td>
-                        <td className="p-2">
-                          <div className="text-sm">
-                            {item.reference_document_type && (
-                              <Badge variant="outline" className="mb-1">
-                                {item.reference_document_type}
-                              </Badge>
-                            )}
-                            <div>{item.reference || item.description}</div>
-                          </div>
+                          <div className="text-sm">{row.reference || t("accountsReceivable.openItem")}</div>
+                          {row.account_code && (
+                            <div className="text-xs text-muted-foreground">
+                              {row.account_code} · {row.account_name}
+                            </div>
+                          )}
                         </td>
                         <td className="p-2 text-sm">
-                          {new Date(item.entry_date).toLocaleDateString()}
-                        </td>
-                        <td className="p-2 text-sm">
-                          {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'N/A'}
+                          <div>{t("accountsReceivable.entryDate", { date: new Date(row.entry_date).toLocaleDateString(locale) })}</div>
+                          <div className="text-muted-foreground">
+                            {t("accountsReceivable.dueDate", {
+                              date: row.due_date ? new Date(row.due_date).toLocaleDateString(locale) : t("accountsReceivable.notAvailable"),
+                            })}
+                          </div>
                         </td>
                         <td className="p-2">
-                          <Badge 
-                            variant={
-                              item.aging_bucket === 'Current' ? 'default' :
-                              item.aging_bucket === '1-30 Days' ? 'secondary' :
-                              'destructive'
-                            }
-                          >
-                            {item.aging_bucket}
+                          <Badge variant={row.days_overdue && row.days_overdue > 0 ? "destructive" : "outline"}>
+                            {row.aging_bucket}
                           </Badge>
                         </td>
-                        <td className="p-2 text-right font-medium">
-                          ${item.balance.toFixed(2)}
-                        </td>
+                        <td className="p-2 text-right font-semibold">{money(row.balance, locale)}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </CardContent>
           </Card>
         )}
@@ -355,5 +236,33 @@ const AccountsReceivable = () => {
     </AppLayout>
   );
 };
+
+function SummaryCard({ title, value, icon: Icon }: { title: string; value: string; icon: typeof CreditCard }) {
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{title}</p>
+            <p className="mt-3 text-3xl font-semibold tracking-[-0.03em]">{value}</p>
+          </div>
+          <div className="metric-icon-shell flex h-11 w-11 items-center justify-center rounded-2xl">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="p-8 text-center text-sm text-muted-foreground">
+        {text}
+      </td>
+    </tr>
+  );
+}
 
 export default AccountsReceivable;

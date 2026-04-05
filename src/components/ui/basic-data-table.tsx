@@ -9,7 +9,7 @@ export type DataTableColumn<T> = {
   header: string;
   sortable?: boolean;
   filterable?: boolean;
-  render?: (value: any, row: T) => React.ReactNode;
+  render?: (value: T[keyof T], row: T) => React.ReactNode;
   width?: string;
 };
 
@@ -30,7 +30,7 @@ export type DataTableProps<T> = {
   onRowClick?: (row: T, index: number) => void;
 };
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   className,
@@ -250,7 +250,7 @@ export function DataTable<T extends Record<string, any>>({
                             }}
                             className="absolute right-2 top-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            ✕
+                            Clear
                           </button>
                         )}
                       </div>
@@ -270,7 +270,7 @@ export function DataTable<T extends Record<string, any>>({
                     )}
                   >
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="text-4xl">📊</div>
+                      <div className="text-4xl">-</div>
                       <div className="font-medium">{emptyMessage}</div>
                     </div>
                   </td>
@@ -359,6 +359,7 @@ export function DataTable<T extends Record<string, any>>({
 }
 
 export default DataTable;
+
 
 
 

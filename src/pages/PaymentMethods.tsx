@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useToast } from "@/hooks/use-toast";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useState, useEffect } from "react";
@@ -36,7 +36,7 @@ interface Account {
 const PaymentMethods = () => {
   const { state } = useAccounting();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { t } = useTranslation();
   
@@ -86,27 +86,16 @@ const PaymentMethods = () => {
     if (!activeCompany?.id) return;
     
     try {
-      // Map frontend company ID to database UUID (same pattern as Reports page)
-      const idMapping = {
-        '1754730703821': '33105b2a-b01f-49f3-9b44-a15632da7435',
-        '1754731842426': 'c2c05a4e-2368-4c1d-a0e4-92f567930926', 
-        '1754731848904': 'c6ad1436-6474-43a8-b2e8-f1d078cd0cab',
-        '1754731853398': '6e0641dd-87d3-4a47-b109-786538dc58f0'
-      };
-      const actualCompanyId = idMapping[activeCompany.id] || activeCompany.id;
-      
-      console.log('PaymentMethods - Fetching accounts for company:', actualCompanyId);
       
       const { data, error } = await supabase
         .from('chart_of_accounts')
         .select('id, account_code, account_name, account_type')
-        .eq('company_id', actualCompanyId)
+        .eq('company_id', activeCompany.id)
         .eq('is_active', true)
         .eq('is_group', false) // Only leaf accounts, not group accounts
         .order('account_code');
 
       if (error) throw error;
-      console.log('PaymentMethods - Accounts fetched:', data);
       setAccounts(data || []);
     } catch (err) {
       console.error('Error fetching accounts:', err);
@@ -394,3 +383,4 @@ const PaymentMethods = () => {
 };
 
 export default PaymentMethods;
+

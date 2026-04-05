@@ -91,10 +91,6 @@ export default function Items() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('🔍 [DEBUG] ===== HANDLE SUBMIT STARTED =====')
-    console.log('🔍 [DEBUG] selectedItem:', selectedItem)
-    console.log('🔍 [DEBUG] formData:', formData)
-    
     try {
       if (selectedItem) {
         // Update existing item
@@ -109,14 +105,7 @@ export default function Items() {
         }
       } else {
         // Create new item
-        console.log('🔍 [DEBUG] ===== ABOUT TO CALL createItem =====')
-        console.log('🔍 [DEBUG] Attempting to create item with data:', formData)
-        console.log('🔍 [DEBUG] createItem function:', createItem)
-        
         const newItem = await createItem(formData)
-        
-        console.log('🔍 [DEBUG] ===== createItem CALL COMPLETED =====')
-        console.log('🔍 [DEBUG] createItem result:', newItem)
         
         if (newItem) {
           toast({
@@ -129,10 +118,9 @@ export default function Items() {
           // Handle the case when createItem returns null
           toast({
             title: "Error",
-            description: "Failed to create item. Please check the console for details.",
+            description: "Failed to create item. Please try again.",
             variant: "destructive",
           })
-          console.error('🔍 [DEBUG] createItem returned null - check console for errors')
         }
       }
     } catch (error) {
@@ -945,3 +933,5 @@ function ItemForm({
     </form>
   )
 }
+
+

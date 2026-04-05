@@ -1,48 +1,37 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase, Database } from '@/lib/supabase'
+import { db, DatabaseTable } from '@/lib/database-client'
 
-type TableName = keyof Database['public']['Tables']
-
-export function useDatabase<T extends TableName>(tableName: T) {
-  const [data, setData] = useState<Database['public']['Tables'][T]['Row'][]>([])
+export function useDatabase<T extends DatabaseTable>(tableName: T) {
+  const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Helper to ensure unique IDs in the data array
-  const ensureUniqueData = useCallback((records: Database['public']['Tables'][T]['Row'][]) => {
+  const ensureUniqueData = useCallback((records: any[]) => {
     const seenIds = new Set<string>();
     const filtered = records.filter(record => {
       if (seenIds.has(record.id)) {
-        console.warn(`[useDatabase] Duplicate ID found for table ${tableName}: ${record.id}. Filtering out duplicate.`);
+        console.warn(`[useDatabase] Duplicate ID found for table ${String(tableName)}: ${record.id}. Filtering out duplicate.`);
         return false;
       }
       seenIds.add(record.id);
       return true;
     });
-    
-    if (filtered.length !== records.length) {
-      console.log(`[useDatabase] Filtered out ${records.length - filtered.length} duplicate records from ${tableName}`);
-    }
-    
+
     return filtered;
   }, [tableName]);
 
   // Internal fetch function (doesn't set loading state)
   const internalFetch = useCallback(async () => {
     try {
-      const { data: result, error: fetchError } = await supabase
-        .from(tableName)
-        .select('*')
-        .order('created_at', { ascending: false })
+      const { data: result, error: fetchError } = await db.from(tableName).select('*')
 
       if (fetchError) throw fetchError
       
       const uniqueData = ensureUniqueData(result || []);
-      console.log(`[useDatabase] Internal fetch for ${tableName}: ${uniqueData.length} unique records`);
       setData(uniqueData)
       return result
     } catch (err) {
-      console.error(`[useDatabase] Error in internal fetch for ${tableName}:`, err);
       setError(err instanceof Error ? err.message : 'An error occurred')
       return null
     }
@@ -50,16 +39,12 @@ export function useDatabase<T extends TableName>(tableName: T) {
 
   // Fetch all records
   const fetchAll = useCallback(async () => {
-    console.log(`[useDatabase] Fetching from table: ${tableName}`);
-    console.log(`[useDatabase] Supabase client:`, supabase);
     setLoading(true)
     setError(null)
     try {
       const result = await internalFetch()
-      console.log(`[useDatabase] Fetch result:`, result);
       return result
     } catch (err) {
-      console.error(`[useDatabase] Error fetching ${tableName}:`, err);
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
@@ -71,14 +56,10 @@ export function useDatabase<T extends TableName>(tableName: T) {
     setLoading(true)
     setError(null)
     try {
-      const { data: result, error: fetchError } = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data: result, error: fetchError } = await db.from(tableName).eq('id', id).select('*')
 
       if (fetchError) throw fetchError
-      return result
+      return result?.[0] || null
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       return null
@@ -88,19 +69,14 @@ export function useDatabase<T extends TableName>(tableName: T) {
   }, [tableName])
 
   // Create new record
-  const create = useCallback(async (record: Database['public']['Tables'][T]['Insert']) => {
+  const create = useCallback(async (record: any) => {
     setLoading(true)
     setError(null)
     try {
-      const { data: result, error: createError } = await supabase
-        .from(tableName)
-        .insert(record)
-        .select()
-        .single()
+      const { data: result, error: createError } = await db.from(tableName).insert(record)
 
       if (createError) throw createError
       
-      console.log(`[useDatabase] Created record in ${tableName}, refreshing data...`);
       // Refresh data to ensure consistency
       await internalFetch()
       return result
@@ -113,20 +89,14 @@ export function useDatabase<T extends TableName>(tableName: T) {
   }, [tableName, internalFetch])
 
   // Update record
-  const update = useCallback(async (id: string, updates: Database['public']['Tables'][T]['Update']) => {
+  const update = useCallback(async (id: string, updates: any) => {
     setLoading(true)
     setError(null)
     try {
-      const { data: result, error: updateError } = await supabase
-        .from(tableName)
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
+      const { data: result, error: updateError } = await db.from(tableName).update(id, updates)
 
       if (updateError) throw updateError
       
-      console.log(`[useDatabase] Updated record in ${tableName}, refreshing data...`);
       // Refresh data to ensure consistency
       await internalFetch()
       return result
@@ -143,14 +113,10 @@ export function useDatabase<T extends TableName>(tableName: T) {
     setLoading(true)
     setError(null)
     try {
-      const { error: deleteError } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id)
+      const { error: deleteError } = await db.from(tableName).delete(id)
 
       if (deleteError) throw deleteError
       
-      console.log(`[useDatabase] Deleted record from ${tableName}, refreshing data...`);
       // Refresh data to ensure consistency
       await internalFetch()
       return true
@@ -167,7 +133,7 @@ export function useDatabase<T extends TableName>(tableName: T) {
     setLoading(true)
     setError(null)
     try {
-      let query = supabase.from(tableName).select('*')
+      let query = db.from(tableName).select('*')
       
       // Apply filters
       Object.entries(filters).forEach(([key, value]) => {
@@ -176,7 +142,7 @@ export function useDatabase<T extends TableName>(tableName: T) {
         }
       })
 
-      const { data: result, error: fetchError } = await query.order('created_at', { ascending: false })
+      const { data: result, error: fetchError } = await query
 
       if (fetchError) throw fetchError
       setData(ensureUniqueData(result || []))

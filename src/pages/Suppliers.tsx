@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo, useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Edit, Trash2, Eye, Search, Building2, User, Mail, Phone, MapPin, CreditCard, Globe, FileText, Package } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 import { useTranslation } from "react-i18next";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -721,7 +721,7 @@ const Suppliers = () => {
 
   return (
     <AppLayout title={t("suppliers.title")}>
-      <SEO title={`${t("suppliers.title")} — FMS`} description="Manage supplier master data and relationships." />
+      <SEO title={`${t("suppliers.title")} â€” FMS`} description="Manage supplier master data and relationships." />
       {!activeCompany ? (
         <div className="text-center py-12">
           <Package className="mx-auto h-12 w-12 text-gray-400" />

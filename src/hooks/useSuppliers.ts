@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/database-client';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAccounting } from '@/state/accounting';
-import type { Database } from '@/lib/supabase';
 
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
-type Company = Database['public']['Tables']['companies']['Row'];
+interface Supplier {
+  id: string;
+  supplier_code: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_id: string;
+  is_active: boolean;
+  [key: string]: any;
+}
 
 export function useSuppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -25,16 +32,16 @@ export function useSuppliers() {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', true)
-        .order('supplier_code');
+      const { data, error: fetchError } = await db.from('suppliers').eq('company_id', activeCompany.id).select('*');
       
       if (fetchError) throw fetchError;
       
-      setSuppliers(data || []);
+      // Filter active suppliers and sort by supplier_code
+      const activeSuppliers = (data || [])
+        .filter((s: Supplier) => s.is_active !== false)
+        .sort((a: Supplier, b: Supplier) => a.supplier_code.localeCompare(b.supplier_code));
+      
+      setSuppliers(activeSuppliers);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch suppliers');
     } finally {
@@ -47,25 +54,19 @@ export function useSuppliers() {
     if (!activeCompany?.id) return 'SUPP-0001';
     
     try {
-      const { data, error } = await supabase.rpc('generate_supplier_code', {
-        company_uuid: activeCompany.id
-      });
-      
-      if (error) throw error;
-      return data || 'SUPP-0001';
-    } catch (err) {
-      console.error('Error generating supplier code:', err);
-      // Fallback: generate a simple code
+      // Simple fallback: generate code based on existing suppliers
       const maxCode = Math.max(...suppliers.map(s => {
-        const num = parseInt(s.supplier_code.replace('SUPP-', ''));
+        const num = parseInt(s.supplier_code?.replace('SUPP-', '') || '0');
         return isNaN(num) ? 0 : num;
       }), 0);
       return `SUPP-${String(maxCode + 1).padStart(4, '0')}`;
+    } catch {
+      return 'SUPP-0001';
     }
   };
 
   // Add a new supplier
-  const addSupplier = async (supplier: Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'supplier_code' | 'is_active'>) => {
+  const addSupplier = async (supplier: any) => {
     if (!activeCompany?.id) return;
     
     try {
@@ -74,20 +75,18 @@ export function useSuppliers() {
       // Generate supplier code if not provided
       const supplierCode = supplier.supplier_code || await generateSupplierCode();
       
-      const { data, error: insertError } = await supabase
-        .from('suppliers')
-        .insert([{ 
-          ...supplier, 
-          company_id: activeCompany.id,
-          supplier_code: supplierCode,
-          is_active: true
-        }])
-        .select()
-        .single();
+      const { data, error: insertError } = await db.from('suppliers').insert({
+        ...supplier, 
+        company_id: activeCompany.id,
+        supplier_code: supplierCode,
+        is_active: true
+      });
       
       if (insertError) throw insertError;
       
-      setSuppliers(prev => [...prev, data]);
+      if (data) {
+        setSuppliers(prev => [...prev, data as Supplier]);
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add supplier');
@@ -100,16 +99,13 @@ export function useSuppliers() {
     try {
       setError(null);
       
-      const { data, error: updateError } = await supabase
-        .from('suppliers')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error: updateError } = await db.from('suppliers').update(id, updates);
       
       if (updateError) throw updateError;
       
-      setSuppliers(prev => prev.map(supp => supp.id === id ? data : supp));
+      if (data) {
+        setSuppliers(prev => prev.map(supp => supp.id === id ? data as Supplier : supp));
+      }
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update supplier');
@@ -120,29 +116,15 @@ export function useSuppliers() {
   // Delete a supplier (soft delete by setting is_active to false)
   const deleteSupplier = async (id: string) => {
     try {
-      console.log('[deleteSupplier] Starting soft delete for supplier:', id);
       setError(null);
       
-      const { data: updatedSupplier, error: deleteError } = await supabase
-        .from('suppliers')
-        .update({ is_active: false })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedSupplier, error: deleteError } = await db.from('suppliers').update(id, { is_active: false });
       
-      if (deleteError) {
-        console.error('[deleteSupplier] Database error:', deleteError);
-        throw deleteError;
-      }
-      
-      console.log('[deleteSupplier] Supplier soft deleted successfully:', updatedSupplier);
-      
-      // Update local state - remove from suppliers array since we filter by is_active: true
+      if (deleteError) throw deleteError;
       setSuppliers(prev => prev.filter(supp => supp.id !== id));
       
       return updatedSupplier;
     } catch (err) {
-      console.error('[deleteSupplier] Exception:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete supplier';
       setError(errorMessage);
       throw err;
@@ -154,17 +136,13 @@ export function useSuppliers() {
     if (!activeCompany?.id) return [];
     
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', false)
-        .order('supplier_code');
+      const { data, error } = await db.from('suppliers').eq('company_id', activeCompany.id).select('*');
       
       if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('[fetchInactiveSuppliers] Error:', err);
+      // Filter inactive suppliers
+      const inactiveSuppliers = (data || []).filter((s: Supplier) => s.is_active === false);
+      return inactiveSuppliers;
+    } catch {
       return [];
     }
   };
@@ -172,25 +150,13 @@ export function useSuppliers() {
   // Reactivate an inactive supplier
   const reactivateSupplier = async (id: string) => {
     try {
-      console.log('[reactivateSupplier] Reactivating supplier:', id);
-      
-      const { data: updatedSupplier, error } = await supabase
-        .from('suppliers')
-        .update({ is_active: true })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedSupplier, error } = await db.from('suppliers').update(id, { is_active: true });
       
       if (error) throw error;
-      
-      console.log('[reactivateSupplier] Supplier reactivated:', updatedSupplier);
-      
-      // Refresh suppliers to include the reactivated one
       await fetchSuppliers();
       
       return updatedSupplier;
     } catch (err) {
-      console.error('[reactivateSupplier] Error:', err);
       throw err;
     }
   };
@@ -200,18 +166,20 @@ export function useSuppliers() {
     if (!activeCompany?.id || !searchTerm.trim()) return [];
     
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .eq('is_active', true)
-        .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,supplier_code.ilike.%${searchTerm}%`)
-        .order('supplier_code');
+      const { data, error } = await db.from('suppliers').eq('company_id', activeCompany.id).select('*');
       
       if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('[searchSuppliers] Error:', err);
+      
+      // Filter active suppliers and search
+      const filtered = (data || [])
+        .filter((s: Supplier) => s.is_active !== false)
+        .filter((s: Supplier) => 
+          s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.supplier_code?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      return filtered;
+    } catch {
       return [];
     }
   };
@@ -233,24 +201,16 @@ export function useSuppliers() {
 
   // Fetch companies when component mounts
   useEffect(() => {
-    console.log('[useSuppliers] Component mounted, fetching companies...');
-    fetchCompanies();
+    void fetchCompanies();
   }, [fetchCompanies]);
-
-  // Debug companies data
-  useEffect(() => {
-    console.log('[useSuppliers] Companies data changed:', companies);
-    console.log('[useSuppliers] Active company:', activeCompany);
-  }, [companies, activeCompany]);
 
   // Initialize suppliers when company changes
   useEffect(() => {
     if (activeCompany?.id) {
-      console.log('[useSuppliers] Company changed, fetching suppliers for:', activeCompany.id);
-      fetchSuppliers();
+      void fetchSuppliers();
     } else {
-      console.log('[useSuppliers] No active company, clearing suppliers');
       setSuppliers([]);
+      setLoading(false);
     }
   }, [activeCompany?.id]);
 

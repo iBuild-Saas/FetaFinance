@@ -11,12 +11,12 @@ import { useTranslation } from "react-i18next";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/basic-data-table";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useAccounting } from "@/state/accounting";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, FileText, Calendar, Building2, DollarSign, ArrowLeft } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 
 type ViewMode = "list" | "add" | "detail";
 
@@ -62,9 +62,46 @@ interface PurchaseInvoiceLineItemFormData {
   line_total?: number; // Optional field for database values
 }
 
+const toNumber = (value: unknown) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const toDateInputValue = (value: unknown) => {
+  if (!value) return "";
+  const text = String(value);
+  const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+};
+
+const formatDisplayDate = (value: unknown) => {
+  if (!value) return "N/A";
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
+};
+
+const normalizePurchaseInvoice = (invoice: PurchaseInvoiceWithDetails): PurchaseInvoiceWithDetails => ({
+  ...invoice,
+  invoice_date: toDateInputValue(invoice.invoice_date),
+  due_date: toDateInputValue(invoice.due_date),
+  subtotal: toNumber(invoice.subtotal),
+  tax_amount: toNumber(invoice.tax_amount),
+  discount_amount: toNumber(invoice.discount_amount),
+  total_amount: toNumber(invoice.total_amount),
+});
+
+const normalizePurchaseInvoiceLineItem = (item: PurchaseInvoiceLineItem): PurchaseInvoiceLineItem => ({
+  ...item,
+  quantity: toNumber(item.quantity),
+  unit_price: toNumber(item.unit_price),
+  tax_amount: toNumber(item.tax_amount),
+  discount_amount: toNumber(item.discount_amount),
+  line_total: toNumber(item.line_total),
+});
+
 const PurchaseInvoices = () => {
   const { t } = useTranslation();
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
@@ -78,6 +115,7 @@ const PurchaseInvoices = () => {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewMode>("list");
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoiceWithDetails | null>(null);
+  const [selectedInvoiceLineItems, setSelectedInvoiceLineItems] = useState<PurchaseInvoiceLineItem[]>([]);
   
   // Form data
   const [formData, setFormData] = useState<PurchaseInvoiceFormData>({
@@ -118,11 +156,7 @@ const PurchaseInvoices = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('purchase_invoices')
-        .select(`
-          *,
-          suppliers!inner(name, supplier_code, email),
-          purchase_invoice_line_items(*)
-        `)
+        .select('*')
         .eq('company_id', activeCompany.id)
         .eq('is_active', true)
         .order('invoice_date', { ascending: false });
@@ -140,7 +174,7 @@ const PurchaseInvoices = () => {
         }
         return;
       }
-      setInvoices(data || []);
+      setInvoices(((data || []) as PurchaseInvoiceWithDetails[]).map(normalizePurchaseInvoice));
     } catch (err) {
       toast({
         title: "Error",
@@ -193,6 +227,27 @@ const PurchaseInvoices = () => {
       toast({
         title: "Error",
         description: "Failed to fetch items",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchPurchaseInvoiceLineItems = async (invoiceId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_invoice_line_items')
+        .select('*')
+        .eq('invoice_id', invoiceId)
+        .order('created_at');
+
+      if (error) throw error;
+      setSelectedInvoiceLineItems(((data || []) as PurchaseInvoiceLineItem[]).map(normalizePurchaseInvoiceLineItem));
+    } catch (err) {
+      console.error('Error fetching purchase invoice line items:', err);
+      setSelectedInvoiceLineItems([]);
+      toast({
+        title: "Error",
+        description: "Failed to fetch purchase invoice line items",
         variant: "destructive",
       });
     }
@@ -448,7 +503,6 @@ const PurchaseInvoices = () => {
     try {
       setLoading(true);
       
-      console.log(`🔄 Updating invoice ${invoiceId} status to ${newStatus}`);
       
       const { error } = await supabase
         .from('purchase_invoices')
@@ -456,42 +510,34 @@ const PurchaseInvoices = () => {
         .eq('id', invoiceId);
 
       if (error) {
-        console.error('❌ Database update error:', error);
+        console.error('Database update error:', error);
         throw error;
       }
 
-      console.log(`✅ Invoice status updated successfully to ${newStatus}`);
 
       // Wait a moment for triggers to execute
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Check if stock movements were created
       if (newStatus === 'RECEIVED') {
-        console.log('🔍 Checking for stock movements...');
-        const { data: stockMovements, error: stockError } = await supabase
+        const { error: stockError } = await supabase
           .from('stock_movements')
           .select('*')
           .eq('reference_type', 'purchase_invoice')
           .eq('reference_id', invoiceId);
         
         if (stockError) {
-          console.warn('⚠️ Could not check stock movements:', stockError);
-        } else {
-          console.log(`📦 Stock movements found: ${stockMovements?.length || 0}`, stockMovements);
+          console.warn('Could not check stock movements:', stockError);
         }
-
         // Check if journal entries were created
-        console.log('🔍 Checking for journal entries...');
-        const { data: journalEntries, error: journalError } = await supabase
+        const { error: journalError } = await supabase
           .from('journal_entries')
           .select('*')
           .eq('reference_type', 'purchase_invoice')
           .eq('reference_id', invoiceId);
         
         if (journalError) {
-          console.warn('⚠️ Could not check journal entries:', journalError);
-        } else {
-          console.log(`📊 Journal entries found: ${journalEntries?.length || 0}`, journalEntries);
+          console.warn('Could not check journal entries:', journalError);
         }
       }
 
@@ -505,10 +551,10 @@ const PurchaseInvoices = () => {
       
       // If we're in detail view, update the selected invoice
       if (selectedInvoice && selectedInvoice.id === invoiceId) {
-        setSelectedInvoice({ ...selectedInvoice, status: newStatus });
+        setSelectedInvoice(normalizePurchaseInvoice({ ...selectedInvoice, status: newStatus }));
       }
     } catch (err) {
-      console.error('❌ Status update error:', err);
+      console.error('أ¢â€Œإ’ Status update error:', err);
       let errorMessage = 'Unknown error occurred';
       
       if (err instanceof Error) {
@@ -534,15 +580,21 @@ const PurchaseInvoices = () => {
   // Navigation functions
   const startAdd = () => { resetForm(); setView("add"); };
   const startDetail = (invoice: PurchaseInvoiceWithDetails) => { 
-    setSelectedInvoice(invoice); 
+    const normalizedInvoice = normalizePurchaseInvoice(invoice);
+    setSelectedInvoice(normalizedInvoice); 
+    void fetchPurchaseInvoiceLineItems(normalizedInvoice.id);
     setView("detail"); 
   };
-  const backToList = () => { setSelectedInvoice(null); setView("list"); };
+  const backToList = () => {
+    setSelectedInvoice(null);
+    setSelectedInvoiceLineItems([]);
+    setView("list");
+  };
 
   if (view === 'add') {
     return (
       <AppLayout title={t("purchaseInvoice.title")}>
-        <SEO title={`${t("purchaseInvoice.title")} — FinanceHub`} description="Create new purchase invoice for supplier purchases" />
+        <SEO title={`${t("purchaseInvoice.title")} أ¢â‚¬â€‌ FinanceHub`} description="Create new purchase invoice for supplier purchases" />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -591,9 +643,9 @@ const PurchaseInvoices = () => {
                     </span>
                   </div>
                   <p className="text-xs text-green-600 mt-1">
-                    • <strong>SUBMITTED:</strong> Invoice created, no journal entry yet
-                    • <strong>RECEIVED:</strong> Auto journal entry created + stock updated
-                    • <strong>PAID:</strong> Auto journal entry created + stock updated
+                    أ¢â‚¬آ¢ <strong>SUBMITTED:</strong> Invoice created, no journal entry yet
+                    أ¢â‚¬آ¢ <strong>RECEIVED:</strong> Auto journal entry created + stock updated
+                    أ¢â‚¬آ¢ <strong>PAID:</strong> Auto journal entry created + stock updated
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -643,12 +695,12 @@ const PurchaseInvoices = () => {
                     </Select>
                     {formData.status === 'RECEIVED' && (
                       <p className="text-xs text-green-600 mt-1">
-                        ✓ Stock quantities will be updated and movements recorded
+                        أ¢إ“â€œ Stock quantities will be updated and movements recorded
                       </p>
                     )}
                     {formData.status === 'SUBMITTED' && (
                       <p className="text-xs text-blue-600 mt-1">
-                        ✓ Journal entry will be created automatically
+                        أ¢إ“â€œ Journal entry will be created automatically
                       </p>
                     )}
                   </div>
@@ -883,7 +935,7 @@ const PurchaseInvoices = () => {
    if (view === 'detail' && selectedInvoice) {
      return (
        <AppLayout title={`Purchase Invoice #${selectedInvoice.invoice_number}`}>
-         <SEO title={`Purchase Invoice #${selectedInvoice.invoice_number} — FinanceHub`} description="View purchase invoice details" />
+         <SEO title={`Purchase Invoice #${selectedInvoice.invoice_number} أ¢â‚¬â€‌ FinanceHub`} description="View purchase invoice details" />
          
          <div className="space-y-6">
            <Card className="mb-4">
@@ -929,11 +981,11 @@ const PurchaseInvoices = () => {
                  <div className="grid grid-cols-2 gap-4">
                    <div>
                      <Label className="text-sm font-medium text-muted-foreground">Invoice Date</Label>
-                     <p>{new Date(selectedInvoice.invoice_date).toLocaleDateString()}</p>
+                      <p>{formatDisplayDate(selectedInvoice.invoice_date)}</p>
                    </div>
                    <div>
                      <Label className="text-sm font-medium text-muted-foreground">Due Date</Label>
-                     <p>{new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
+                      <p>{formatDisplayDate(selectedInvoice.due_date)}</p>
                    </div>
                    <div>
                      <Label className="text-sm font-medium text-muted-foreground">Status</Label>
@@ -978,10 +1030,15 @@ const PurchaseInvoices = () => {
              <CardHeader>
                <CardTitle className="text-lg">Line Items</CardTitle>
              </CardHeader>
-             <CardContent>
-               <div className="space-y-4">
-                 {selectedInvoice.purchase_invoice_line_items?.map((item, index) => (
-                   <div key={index} className="border rounded-lg p-4">
+              <CardContent>
+                <div className="space-y-4">
+                  {selectedInvoiceLineItems.length === 0 && (
+                    <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      No line items found for this purchase invoice.
+                    </div>
+                  )}
+                  {selectedInvoiceLineItems.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4">
                      <div className="grid md:grid-cols-4 gap-4">
                        <div>
                          <Label className="text-sm font-medium text-muted-foreground">Item</Label>
@@ -992,8 +1049,8 @@ const PurchaseInvoices = () => {
                          <p className="text-sm">{item.description || 'N/A'}</p>
                        </div>
                        <div>
-                         <Label className="text-sm font-medium text-muted-foreground">Qty × Price</Label>
-                         <p>{item.quantity} × {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{item.unit_price?.toFixed(2)}</p>
+                         <Label className="text-sm font-medium text-muted-foreground">Qty ط£â€” Price</Label>
+                         <p>{item.quantity} ط£â€” {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{item.unit_price?.toFixed(2)}</p>
                        </div>
                        <div>
                          <Label className="text-sm font-medium text-muted-foreground">Line Total</Label>
@@ -1015,20 +1072,20 @@ const PurchaseInvoices = () => {
                <div className="space-y-3">
                  <div className="flex justify-between">
                    <span>Subtotal:</span>
-                   <span>${selectedInvoice.subtotal?.toFixed(2) || '0.00'}</span>
+                   <span>${toNumber(selectedInvoice.subtotal).toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between">
                    <span>Tax:</span>
-                   <span>${selectedInvoice.tax_amount?.toFixed(2) || '0.00'}</span>
+                   <span>${toNumber(selectedInvoice.tax_amount).toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between">
                    <span>Discount:</span>
-                   <span>-${(selectedInvoice.discount_amount || 0).toFixed(2)}</span>
+                   <span>-${toNumber(selectedInvoice.discount_amount).toFixed(2)}</span>
                  </div>
                  <Separator />
                  <div className="flex justify-between font-semibold text-lg">
                    <span>Total:</span>
-                                            <span>{activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{selectedInvoice.total_amount?.toFixed(2) || '0.00'}</span>
+                                            <span>{activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{toNumber(selectedInvoice.total_amount).toFixed(2)}</span>
                  </div>
                </div>
              </CardContent>
@@ -1040,7 +1097,7 @@ const PurchaseInvoices = () => {
 
    return (
     <AppLayout title="Purchase Invoices">
-      <SEO title="Purchase Invoices — FinanceHub" description="Manage purchase invoices and supplier procurement" />
+      <SEO title="Purchase Invoices أ¢â‚¬â€‌ FinanceHub" description="Manage purchase invoices and supplier procurement" />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -1092,14 +1149,14 @@ const PurchaseInvoices = () => {
                           <div>
                             <h3 className="font-semibold">Invoice #{invoice.invoice_number}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(invoice.invoice_date).toLocaleDateString()} • {invoice.status}
+                              {new Date(invoice.invoice_date).toLocaleDateString()} أ¢â‚¬آ¢ {invoice.status}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
                             {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}
-                            {invoice.total_amount?.toFixed(2) || '0.00'}
+                            {toNumber(invoice.total_amount).toFixed(2)}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {suppliers.find(s => s.id === invoice.supplier_id)?.name || 'Unknown Supplier'}
@@ -1139,3 +1196,5 @@ const PurchaseInvoices = () => {
 };
 
 export default PurchaseInvoices;
+
+

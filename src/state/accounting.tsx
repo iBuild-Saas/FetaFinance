@@ -101,40 +101,6 @@ type Action =
 
 const STORAGE_KEY = "lovable_fms_v1";
 
-// Compress logo images to reduce storage size
-function compressLogo(logoDataUrl: string, maxWidth: number = 200, maxHeight: number = 200): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      
-      // Calculate new dimensions maintaining aspect ratio
-      let { width, height } = img;
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height;
-          height = maxHeight;
-        }
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Draw and compress
-      ctx.drawImage(img, 0, 0, width, height);
-      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
-      resolve(compressedDataUrl);
-    };
-    img.src = logoDataUrl;
-  });
-}
-
 // Clean state before persistence to reduce size
 function prepareStateForStorage(state: AccountingState): AccountingState {
   return {
@@ -392,67 +358,3 @@ export const useAccounting = () => {
   if (!ctx) throw new Error("useAccounting must be used within AccountingProvider");
   return ctx;
 };
-
-// Selectors & utilities
-export function useActiveCompany() {
-  const { state } = useAccounting();
-  const company = state.companies.find(c => c.id === state.activeCompanyId);
-  return company;
-}
-
-export function computeGeneralLedger(state: AccountingState, companyId: ID) {
-  const journals = state.journals.filter(j => j.companyId === companyId).sort((a, b) => a.date.localeCompare(b.date));
-  type Row = { date: string; memo?: string; accountId: ID; accountName: string; debit: number; credit: number; balance: number; };
-  const rows: Row[] = [];
-  const balances = new Map<ID, number>();
-
-  const accounts = state.accounts.filter(a => a.companyId === companyId);
-  const accountMap = new Map(accounts.map(a => [a.id, a] as const));
-
-  journals.forEach(j => {
-    j.lines.forEach(l => {
-      const acc = accountMap.get(l.accountId);
-      if (!acc) return;
-      const sign = acc.type === "Asset" || acc.type === "Expense" ? 1 : -1; // Debit-positive for A/E
-      const prev = balances.get(l.accountId) ?? 0;
-      const next = prev + sign * (l.debit - l.credit);
-      balances.set(l.accountId, next);
-      rows.push({ date: j.date, memo: j.memo, accountId: l.accountId, accountName: acc.name, debit: l.debit, credit: l.credit, balance: next });
-    });
-  });
-  return rows;
-}
-
-export function computeIncomeStatement(state: AccountingState, companyId: ID) {
-  const accounts = state.accounts.filter(a => a.companyId === companyId && a.reportType === "Income Statement");
-  const totals: Record<ID, { name: string; type: AccountType; amount: number }> = {};
-  accounts.forEach(a => { totals[a.id] = { name: a.name, type: a.type, amount: 0 }; });
-  const rows = state.journals.filter(j => j.companyId === companyId).flatMap(j => j.lines);
-  rows.forEach(l => {
-    const acc = accounts.find(a => a.id === l.accountId);
-    if (!acc) return;
-    const sign = acc.type === "Expense" ? 1 : -1; // Expenses positive, Revenues negative
-    totals[acc.id].amount += sign * (l.debit - l.credit);
-  });
-  const revenue = Object.values(totals).filter(t => t.type === "Revenue").reduce((s, t) => s + t.amount, 0) * -1; // positive revenue
-  const expenses = Object.values(totals).filter(t => t.type === "Expense").reduce((s, t) => s + t.amount, 0);
-  const netIncome = revenue - expenses;
-  return { totals, revenue, expenses, netIncome };
-}
-
-export function computeBalanceSheet(state: AccountingState, companyId: ID) {
-  const accounts = state.accounts.filter(a => a.companyId === companyId && a.reportType === "Balance Sheet");
-  const totals: Record<ID, { name: string; type: AccountType; amount: number }> = {};
-  accounts.forEach(a => { totals[a.id] = { name: a.name, type: a.type, amount: 0 }; });
-  const rows = state.journals.filter(j => j.companyId === companyId).flatMap(j => j.lines);
-  rows.forEach(l => {
-    const acc = accounts.find(a => a.id === l.accountId);
-    if (!acc) return;
-    const sign = acc.type === "Asset" ? 1 : -1; // Assets debit-positive, L&E credit-positive
-    totals[acc.id].amount += sign * (l.debit - l.credit);
-  });
-  const assets = Object.values(totals).filter(t => t.type === "Asset").reduce((s, t) => s + t.amount, 0);
-  const liabilities = Object.values(totals).filter(t => t.type === "Liability").reduce((s, t) => s + t.amount, 0);
-  const equity = Object.values(totals).filter(t => t.type === "Equity").reduce((s, t) => s + t.amount, 0);
-  return { totals, assets, liabilities, equity, balance: assets - (liabilities + equity) };
-}

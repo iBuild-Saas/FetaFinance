@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useAccounting } from "@/state/accounting";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, BookOpen, FileText, TrendingUp, Calendar, Filter, Eye } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 
 type ViewMode = "account" | "all" | "trial";
 
@@ -52,8 +52,13 @@ type TrialBalanceEntry = {
 
 type ChartOfAccount = Database['public']['Tables']['chart_of_accounts']['Row'];
 
+const toNumber = (value: unknown) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const Ledger = () => {
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
@@ -220,36 +225,56 @@ const Ledger = () => {
     
     try {
       setLoading(true);
-      console.log('Fetching general ledger for company:', activeCompany.id);
-      console.log('Date range:', startDate, 'to', endDate);
-      
-      const { data, error } = await supabase
-        .from('general_ledger_view')
+      const entriesResult = await supabase
+        .from('journal_entries')
         .select('*')
         .eq('company_id', activeCompany.id)
         .gte('entry_date', startDate)
         .lte('entry_date', endDate)
-        .eq('entry_status', 'POSTED')
-        .order('entry_date', { ascending: true })
-        .order('entry_number', { ascending: true })
-        .order('line_number', { ascending: true });
+        .eq('is_active', true)
+        .order('entry_date', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching general ledger:', error);
-        if (error.code === '42P01') {
-          toast({
-            title: "Database Setup Required",
-            description: "Please run the CREATE_GENERAL_LEDGER_VIEWS.sql script first.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
+      const linesResult = await supabase
+        .from('journal_entry_lines')
+        .select('*');
+
+      if (entriesResult.error || linesResult.error) {
+        throw entriesResult.error || linesResult.error;
       }
-      
-      console.log('General ledger data fetched:', data?.length || 0, 'entries');
-      setLedgerEntries(data || []);
+
+      const entryMap = new Map((entriesResult.data || []).map((entry: any) => [entry.id, entry]));
+      const accountMap = new Map(accounts.map(account => [account.id, account]));
+
+      const data = (linesResult.data || [])
+        .filter((line: any) => entryMap.has(line.journal_entry_id))
+        .map((line: any, index: number) => {
+          const entry = entryMap.get(line.journal_entry_id);
+          const account = accountMap.get(line.account_id);
+          return {
+            line_id: line.id,
+            journal_entry_id: line.journal_entry_id,
+            entry_number: entry?.journal_number || '',
+            entry_date: entry?.entry_date || entry?.created_at || '',
+            reference: entry?.reference_number || '',
+            journal_memo: entry?.description || '',
+            line_description: line.description || '',
+            account_id: line.account_id,
+            account_code: account?.account_code || '',
+            account_name: account?.account_name || '',
+            account_type: account?.account_type || '',
+            normal_balance: account?.normal_balance || '',
+            line_number: index + 1,
+            debit_amount: Number(line.debit_amount || 0),
+            credit_amount: Number(line.credit_amount || 0),
+          };
+        })
+        .sort((a: any, b: any) => {
+          const dateCompare = String(a.entry_date).localeCompare(String(b.entry_date));
+          if (dateCompare !== 0) return dateCompare;
+          return String(a.entry_number).localeCompare(String(b.entry_number));
+        });
+
+      setLedgerEntries(data);
       
       // Always calculate opening balance for all accounts as of start date
       // This ensures accurate balance reporting even if no transactions in current range
@@ -260,8 +285,6 @@ const Ledger = () => {
         const balance = await fetchOpeningBalance(account.id, startDate);
         totalOpeningBalance += balance;
       }
-      
-      console.log('Opening balance calculated:', totalOpeningBalance, 'for', allAccounts.length, 'accounts');
       setOpeningBalance(totalOpeningBalance);
     } catch (err) {
       console.error('General ledger fetch error:', err);
@@ -297,8 +320,6 @@ const Ledger = () => {
           const balance = await fetchOpeningBalance(account.id, startDate);
           totalOpeningBalance += balance;
         }
-        
-        console.log('Opening balance updated for date range:', totalOpeningBalance);
         setOpeningBalance(totalOpeningBalance);
       };
       
@@ -319,7 +340,7 @@ const Ledger = () => {
   if (!activeCompany) {
     return (
       <AppLayout title="General Ledger">
-        <SEO title="General Ledger — FinanceHub" description="View detailed account activity and balances" />
+        <SEO title="General Ledger أ¢â‚¬â€‌ FinanceHub" description="View detailed account activity and balances" />
         <div className="text-center py-8">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Select a Company</h3>
@@ -331,7 +352,7 @@ const Ledger = () => {
 
   return (
     <AppLayout title="General Ledger">
-      <SEO title="General Ledger — FinanceHub" description="View detailed account activity and balances" />
+      <SEO title="General Ledger أ¢â‚¬â€‌ FinanceHub" description="View detailed account activity and balances" />
       
       <div className="space-y-6">
         {/* Header */}
@@ -382,7 +403,7 @@ const Ledger = () => {
                       <SelectContent>
                         {accounts.map(account => (
                           <SelectItem key={account.id} value={account.id}>
-                            {account.account_code} — {account.account_name}
+                            {account.account_code} أ¢â‚¬â€‌ {account.account_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -418,7 +439,7 @@ const Ledger = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>
-                      Account Ledger: {selectedAccountData?.account_code} — {selectedAccountData?.account_name}
+                      Account Ledger: {selectedAccountData?.account_code} أ¢â‚¬â€‌ {selectedAccountData?.account_name}
                     </span>
                     <Badge variant="outline">
                       {selectedAccountData?.account_type} ({selectedAccountData?.normal_balance})
@@ -456,18 +477,18 @@ const Ledger = () => {
                             <TableRow key={`${entry.entry_number}-${entry.line_number || Math.random()}`} className="hover:bg-muted/50">
                               <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                               <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
-                              <TableCell className="text-sm">{entry.reference || '—'}</TableCell>
+                              <TableCell className="text-sm">{entry.reference || 'أ¢â‚¬â€‌'}</TableCell>
                               <TableCell className="text-sm">
-                                {entry.line_description || entry.journal_memo || '—'}
+                                {entry.line_description || entry.journal_memo || 'أ¢â‚¬â€‌'}
                               </TableCell>
                               <TableCell className="text-right font-medium">
-                                {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : '—'}
+                                {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
                               </TableCell>
                               <TableCell className="text-right font-medium">
-                                {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : '—'}
+                                {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
                               </TableCell>
                               <TableCell className="text-right font-bold">
-                                ${entry.running_balance?.toFixed(2) || '0.00'}
+                                ${toNumber(entry.running_balance).toFixed(2)}
                               </TableCell>
                             </TableRow>
                           ))
@@ -558,14 +579,14 @@ const Ledger = () => {
                           <TableCell className="font-medium text-primary">
                             {new Date(startDate).toLocaleDateString()}
                           </TableCell>
-                          <TableCell className="font-medium text-primary">—</TableCell>
+                          <TableCell className="font-medium text-primary">أ¢â‚¬â€‌</TableCell>
                           <TableCell className="font-medium text-primary">Opening Balance</TableCell>
-                          <TableCell className="font-medium text-primary">—</TableCell>
+                          <TableCell className="font-medium text-primary">أ¢â‚¬â€‌</TableCell>
                           <TableCell className="text-right font-medium text-primary">
-                            {openingBalance > 0 ? `$${openingBalance.toFixed(2)}` : '—'}
+                            {openingBalance > 0 ? `$${openingBalance.toFixed(2)}` : 'أ¢â‚¬â€‌'}
                           </TableCell>
                           <TableCell className="text-right font-medium text-primary">
-                            {openingBalance < 0 ? `$${Math.abs(openingBalance).toFixed(2)}` : '—'}
+                            {openingBalance < 0 ? `$${Math.abs(openingBalance).toFixed(2)}` : 'أ¢â‚¬â€‌'}
                           </TableCell>
                         </TableRow>
                       )}
@@ -582,16 +603,16 @@ const Ledger = () => {
                             <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                             <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
                             <TableCell className="text-sm">
-                              {entry.account_code} — {entry.account_name}
+                              {entry.account_code} أ¢â‚¬â€‌ {entry.account_name}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {entry.line_description || entry.journal_memo || '—'}
+                              {entry.line_description || entry.journal_memo || 'أ¢â‚¬â€‌'}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : '—'}
+                              {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : '—'}
+                              {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
                             </TableCell>
                           </TableRow>
                         ))
@@ -709,3 +730,4 @@ const Ledger = () => {
 };
 
 export default Ledger;
+

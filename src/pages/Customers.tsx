@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo, useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Edit, Trash2, Eye, Search, Building2, User, Mail, Phone, MapPin, CreditCard, Globe, FileText } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 import { useTranslation } from "react-i18next";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -220,12 +220,11 @@ const Customers = () => {
     const customerToDelete = customers.find(cust => cust.id === id);
     if (!customerToDelete) return;
 
-    const confirmMessage = `Are you sure you want to delete "${customerToDelete.name}" (${customerToDelete.customer_code})?\n\nThis will:\n• Mark the customer as inactive\n• Remove them from the customers view\n• Preserve any historical data\n\nThis action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete "${customerToDelete.name}" (${customerToDelete.customer_code})?\n\nThis will:\nâ€¢ Mark the customer as inactive\nâ€¢ Remove them from the customers view\nâ€¢ Preserve any historical data\n\nThis action cannot be undone.`;
 
     if (window.confirm(confirmMessage)) {
       try {
         await deleteCustomer(id);
-        console.log("Customer deleted successfully");
       } catch (error) {
         console.error("Failed to delete customer:", error);
       }
@@ -251,7 +250,7 @@ const Customers = () => {
             <div className="flex items-center justify-between">
               <CardTitle>{view === "add" ? t("customers.addNewCustomer") : t("customers.editCustomer")}</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                ← {t("customers.backToCustomers")}
+                â†گ {t("customers.backToCustomers")}
               </Button>
             </div>
           </CardHeader>
@@ -560,7 +559,7 @@ const Customers = () => {
                   Edit
                 </Button>
                 <Button variant="outline" onClick={backToList}>
-                  ← Back to Customers
+                  â†گ Back to Customers
                 </Button>
               </div>
             </div>
@@ -746,7 +745,7 @@ const Customers = () => {
 
   return (
     <AppLayout title={t("customers.title")}>
-      <SEO title={`${t("customers.title")} — FMS`} description="Manage customer master data and relationships." />
+      <SEO title={`${t("customers.title")} â€” FMS`} description="Manage customer master data and relationships." />
       
       {!activeCompany ? (
         <div className="flex items-center justify-center h-64">
@@ -1011,3 +1010,4 @@ const Customers = () => {
 };
 
 export default Customers;
+

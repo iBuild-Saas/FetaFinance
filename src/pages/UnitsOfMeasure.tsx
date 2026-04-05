@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Plus, Edit, Trash2, Ruler } from 'lucide-react'
-import { useSupabase } from '@/contexts/SupabaseContext'
+import { useDatabaseContext } from '@/contexts/DatabaseContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,7 +31,7 @@ interface UnitFormData {
 }
 
 export default function UnitsOfMeasure() {
-  const { supabase } = useSupabase()
+  const { supabase } = useDatabaseContext()
   const { toast } = useToast()
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies')
   const { state } = useAccounting()
@@ -57,13 +57,13 @@ export default function UnitsOfMeasure() {
 
   // Fetch companies first
   React.useEffect(() => {
-    fetchCompanies()
+    void fetchCompanies()
   }, [fetchCompanies])
 
   // Fetch units when active company changes
   React.useEffect(() => {
     if (activeCompany) {
-      fetchUnits()
+      void fetchUnits()
     }
   }, [activeCompany])
 
@@ -97,11 +97,8 @@ export default function UnitsOfMeasure() {
   const createUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     const companyId = getCompanyId()
-    console.log('Company ID:', companyId)
-    console.log('Form data:', formData)
     
     if (!companyId) {
-      console.error('No company ID found')
       toast({
         title: "Error",
         description: `No company selected. Please select a company first. Current company: ${activeCompany ? activeCompany.name : 'None'}`,
@@ -112,7 +109,6 @@ export default function UnitsOfMeasure() {
 
     setLoading(true)
     try {
-      console.log('Attempting to insert unit...')
       const { data, error } = await supabase
         .from('item_units_of_measure')
         .insert([{
@@ -121,14 +117,10 @@ export default function UnitsOfMeasure() {
         }])
         .select()
 
-      console.log('Insert result:', { data, error })
-
       if (error) {
-        console.error('Supabase error:', error)
         throw error
       }
 
-      console.log('Unit created successfully:', data)
       toast({
         title: "Success",
         description: "Unit of measure created successfully",
@@ -136,9 +128,8 @@ export default function UnitsOfMeasure() {
       
       setIsCreateDialogOpen(false)
       resetForm()
-      fetchUnits()
+      void fetchUnits()
     } catch (err) {
-      console.error('Error creating unit:', err)
       toast({
         title: "Error",
         description: `Failed to create unit of measure: ${err instanceof Error ? err.message : 'Unknown error'}`,
@@ -170,7 +161,7 @@ export default function UnitsOfMeasure() {
       
       setIsEditDialogOpen(false)
       resetForm()
-      fetchUnits()
+      void fetchUnits()
     } catch (err) {
       toast({
         title: "Error",
@@ -198,7 +189,7 @@ export default function UnitsOfMeasure() {
           description: "Unit of measure deleted successfully",
         })
         
-        fetchUnits()
+        void fetchUnits()
       } catch (err) {
         toast({
           title: "Error",
@@ -230,13 +221,9 @@ export default function UnitsOfMeasure() {
     setIsEditDialogOpen(true)
   }
 
-  React.useEffect(() => {
-    fetchUnits()
-  }, [])
-
   return (
     <AppLayout title="Units of Measure">
-      <SEO title="Units of Measure — FMS" description="Manage units of measurement for items" />
+      <SEO title="Units of Measure â€” FMS" description="Manage units of measurement for items" />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -447,4 +434,5 @@ export default function UnitsOfMeasure() {
     </AppLayout>
   )
 }
+
 

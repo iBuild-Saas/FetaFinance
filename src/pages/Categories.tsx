@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import { Plus, Edit, Trash2, FolderOpen } from 'lucide-react'
-import { useSupabase } from '@/contexts/SupabaseContext'
+import { useDatabaseContext } from '@/contexts/DatabaseContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import AppLayout from '@/components/layout/AppLayout'
@@ -33,7 +32,7 @@ interface CategoryFormData {
 }
 
 export default function Categories() {
-  const { supabase } = useSupabase()
+  const { supabase } = useDatabaseContext()
   const { toast } = useToast()
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies')
   const { state } = useAccounting()
@@ -52,16 +51,7 @@ export default function Categories() {
     parent_category_id: 'none'
   })
 
-  // Get company ID from active company
-  const getCompanyId = () => {
-    console.log('getCompanyId called:', { 
-      activeCompany, 
-      companies, 
-      stateActiveCompanyId: state.activeCompanyId,
-      foundCompany: companies?.find(c => c.id === state.activeCompanyId)
-    })
-    return activeCompany?.id
-  }
+  const getCompanyId = () => activeCompany?.id
 
   // Fetch categories
   const fetchCategories = async () => {
@@ -93,11 +83,8 @@ export default function Categories() {
   const createCategory = async (e: React.FormEvent) => {
     e.preventDefault()
     const companyId = getCompanyId()
-    console.log('Company ID:', companyId)
-    console.log('Form data:', formData)
     
     if (!companyId) {
-      console.error('No company ID found')
       toast({
         title: "Error",
         description: `No company selected. Please select a company first. Current company: ${activeCompany ? activeCompany.name : 'None'}`,
@@ -108,7 +95,6 @@ export default function Categories() {
 
     setLoading(true)
     try {
-      console.log('Attempting to insert category...')
       const { data, error } = await supabase
         .from('item_categories')
         .insert([{
@@ -118,14 +104,10 @@ export default function Categories() {
         }])
         .select()
 
-      console.log('Insert result:', { data, error })
-
       if (error) {
-        console.error('Supabase error:', error)
         throw error
       }
 
-      console.log('Category created successfully:', data)
       toast({
         title: "Success",
         description: "Category created successfully",
@@ -133,9 +115,8 @@ export default function Categories() {
       
       setIsCreateDialogOpen(false)
       resetForm()
-      fetchCategories()
+      void fetchCategories()
     } catch (err) {
-      console.error('Error creating category:', err)
       toast({
         title: "Error",
         description: `Failed to create category: ${err instanceof Error ? err.message : 'Unknown error'}`,
@@ -170,7 +151,7 @@ export default function Categories() {
       
       setIsEditDialogOpen(false)
       resetForm()
-      fetchCategories()
+      void fetchCategories()
     } catch (err) {
       toast({
         title: "Error",
@@ -198,7 +179,7 @@ export default function Categories() {
           description: "Category deleted successfully",
         })
         
-        fetchCategories()
+        void fetchCategories()
       } catch (err) {
         toast({
           title: "Error",
@@ -242,18 +223,18 @@ export default function Categories() {
   }
 
   React.useEffect(() => {
-    fetchCompanies()
+    void fetchCompanies()
   }, [fetchCompanies])
 
   React.useEffect(() => {
     if (activeCompany) {
-      fetchCategories()
+      void fetchCategories()
     }
   }, [activeCompany])
 
   return (
     <AppLayout title="Categories">
-      <SEO title="Categories — FMS" description="Manage item categories and classifications" />
+      <SEO title="Categories â€” FMS" description="Manage item categories and classifications" />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -472,3 +453,4 @@ export default function Categories() {
     </AppLayout>
   )
 }
+

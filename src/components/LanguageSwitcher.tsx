@@ -16,43 +16,40 @@ interface LanguageSwitcherProps {
   variant?: 'default' | 'compact';
 }
 
-const languages: { code: Language; name: string; nativeName: string }[] = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
-];
-
-export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ 
+export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   className,
-  variant = 'default' 
+  variant = 'default'
 }) => {
   const { t } = useTranslation();
   const { language, changeLanguage, isRTL } = useLanguage();
+  const languages: { code: Language; name: string; nativeName: string }[] = [
+    { code: 'en', name: t('language.english'), nativeName: 'English' },
+    { code: 'ar', name: t('language.arabic'), nativeName: 'العربية' },
+  ];
 
   const handleLanguageChange = (newLanguage: Language) => {
     changeLanguage(newLanguage);
   };
 
-  const currentLanguage = languages.find(lang => lang.code === language);
-
   if (variant === 'compact') {
     return (
       <Select value={language} onValueChange={handleLanguageChange}>
-        <SelectTrigger 
+        <SelectTrigger
           className={cn(
             "w-[120px] bg-background border-border hover:bg-muted transition-colors",
             className
           )}
         >
-          <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+          <Globe className={cn("h-4 w-4 text-muted-foreground", isRTL ? "ml-2" : "mr-2")} />
           <SelectValue />
         </SelectTrigger>
-        <SelectContent 
+        <SelectContent
           className="bg-background border-border"
           align={isRTL ? "end" : "start"}
         >
           {languages.map((lang) => (
-            <SelectItem 
-              key={lang.code} 
+            <SelectItem
+              key={lang.code}
               value={lang.code}
               className="hover:bg-muted focus:bg-muted transition-colors"
             >
@@ -66,20 +63,20 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Globe className="w-4 h-4 text-muted-foreground" />
+      <Globe className="h-4 w-4 text-muted-foreground" />
       <Select value={language} onValueChange={handleLanguageChange}>
-        <SelectTrigger 
+        <SelectTrigger
           className="w-[160px] bg-background border-border hover:bg-muted transition-colors"
         >
           <SelectValue placeholder={t('language.switchLanguage')} />
         </SelectTrigger>
-        <SelectContent 
+        <SelectContent
           className="bg-background border-border"
           align={isRTL ? "end" : "start"}
         >
           {languages.map((lang) => (
-            <SelectItem 
-              key={lang.code} 
+            <SelectItem
+              key={lang.code}
               value={lang.code}
               className="hover:bg-muted focus:bg-muted transition-colors"
             >

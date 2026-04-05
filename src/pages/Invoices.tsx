@@ -10,12 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/basic-data-table";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useAccounting } from "@/state/accounting";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, FileText, Calendar, User, DollarSign } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 
 type ViewMode = "list" | "add" | "detail";
 
@@ -52,8 +52,34 @@ interface InvoiceLineItemFormData {
   line_total?: number; // Optional field for database values
 }
 
+const toNumber = (value: unknown) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeInvoice = (invoice: Invoice): Invoice => ({
+  ...invoice,
+  subtotal: toNumber(invoice.subtotal),
+  tax_amount: toNumber(invoice.tax_amount),
+  discount_amount: toNumber(invoice.discount_amount),
+  total_amount: toNumber(invoice.total_amount),
+});
+
+const toDateInputValue = (value: unknown) => {
+  if (!value) return "";
+  const text = String(value);
+  const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+};
+
+const formatDisplayDate = (value: unknown) => {
+  if (!value) return "N/A";
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
+};
+
 const Invoices = () => {
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
@@ -108,11 +134,7 @@ const Invoices = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('sales_invoices')
-        .select(`
-          *,
-          customers!inner(name, customer_code, email),
-          sales_invoice_line_items(*)
-        `)
+        .select('*')
         .eq('company_id', activeCompany.id)
         .eq('is_active', true)
         .order('invoice_date', { ascending: false });
@@ -131,7 +153,7 @@ const Invoices = () => {
         }
         return;
       }
-      setInvoices(data || []);
+      setInvoices(((data || []) as Invoice[]).map(normalizeInvoice));
     } catch (err) {
       toast({
         title: "Error",
@@ -192,7 +214,6 @@ const Invoices = () => {
   // Fetch invoice line items for detail view
   const fetchInvoiceLineItems = async (invoiceId: string) => {
     try {
-      console.log('🔍 Fetching line items for invoice:', invoiceId);
       
       const { data, error } = await supabase
         .from('sales_invoice_line_items')
@@ -201,22 +222,13 @@ const Invoices = () => {
         .order('created_at');
 
       if (error) {
-        console.error('❌ Error fetching line items:', error);
+        console.error('Error fetching line items:', error);
         throw error;
       }
       
-      console.log('✅ Raw line items data:', data);
-      console.log('📊 Number of line items found:', data?.length || 0);
       
       // Transform to match our form structure
       const transformedItems: InvoiceLineItemFormData[] = (data || []).map((item, index) => {
-        console.log(`🔄 Transforming item ${index}:`, {
-          raw: item,
-          item_name: item.item_name,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          line_total: item.line_total
-        });
         return {
           item_id: item.item_id || "", // Read from database if available (after migration)
           item_name: item.item_name || `Item ${index + 1}`,
@@ -231,18 +243,16 @@ const Invoices = () => {
         };
       });
       
-      console.log('✅ Transformed line items:', transformedItems);
       
       if (transformedItems.length > 0) {
         setLineItems(transformedItems);
       } else {
-        console.log('⚠️ No line items found, using default');
         setLineItems([
           { item_id: "", item_name: "", description: "", quantity: 1, uom: "PCS", unit_price: 0, tax_rate: 0, discount_rate: 0, discount_amount: 0 }
         ]);
       }
     } catch (err) {
-      console.error('❌ Error in fetchInvoiceLineItems:', err);
+      console.error('Error loading invoice line items:', err);
       // Set default empty line item on error
       setLineItems([
         { item_id: "", item_name: "", description: "", quantity: 1, uom: "PCS", unit_price: 0, tax_rate: 0, discount_rate: 0, discount_amount: 0 }
@@ -417,7 +427,6 @@ const Invoices = () => {
         description: "Please ensure all line items have valid item name, quantity, and unit price",
         variant: "destructive",
       });
-      console.log('Invalid line items:', invalidLineItems);
       return;
     }
 
@@ -442,18 +451,8 @@ const Invoices = () => {
 
     setLoading(true);
     try {
-      console.log('Saving invoice with data:', {
-        formData,
-        companyId: activeCompany.id,
-        subtotal,
-        totalTax,
-        totalLineItemDiscount,
-        wholeInvoiceDiscount,
-        total
-      });
       
       // Check if sales_invoices table exists
-      console.log('Checking if sales_invoices table exists...');
       const { data: tableCheck, error: tableError } = await supabase
         .from('sales_invoices')
         .select('id')
@@ -491,9 +490,6 @@ const Invoices = () => {
           is_active: true
         };
       
-      console.log('Attempting to insert invoice with data:', invoiceData);
-      console.log('Active company:', activeCompany);
-      console.log('Form data:', formData);
       
       // Test table access first
       const { data: testData, error: testError } = await supabase
@@ -551,7 +547,6 @@ const Invoices = () => {
         throw invoiceError;
       }
 
-      console.log('Invoice created successfully:', invoice);
 
       // Create line items - map to database fields correctly
       const lineItemsWithInvoiceId = lineItems.map(item => ({
@@ -570,7 +565,6 @@ const Invoices = () => {
                    (((item.quantity || 1) * (item.unit_price || 0) * (item.discount_rate || 0)) / 100)
       }));
 
-      console.log('Line items to insert:', lineItemsWithInvoiceId);
 
       const { error: lineItemsError } = await supabase
         .from('sales_invoice_line_items')
@@ -581,7 +575,6 @@ const Invoices = () => {
         throw lineItemsError;
       }
 
-      console.log('Line items created successfully');
 
       toast({
         title: "Success",
@@ -643,7 +636,7 @@ const Invoices = () => {
       
       // If we're in detail view, update the selected invoice
       if (selectedInvoice && selectedInvoice.id === invoiceId) {
-        setSelectedInvoice({ ...selectedInvoice, status: newStatus });
+        setSelectedInvoice(normalizeInvoice({ ...selectedInvoice, status: newStatus }));
       }
     } catch (err) {
       console.error('Status update error:', err);
@@ -689,7 +682,7 @@ const Invoices = () => {
       
       // If we're in detail view, update the selected invoice
       if (selectedInvoice && selectedInvoice.id === invoiceId) {
-        setSelectedInvoice({ ...selectedInvoice, delivery_status: newDeliveryStatus });
+        setSelectedInvoice(normalizeInvoice({ ...selectedInvoice, delivery_status: newDeliveryStatus }));
       }
     } catch (err) {
       console.error('Delivery status update error:', err);
@@ -714,36 +707,34 @@ const Invoices = () => {
   // Navigation functions
   const startAdd = () => { resetForm(); setView("add"); };
   const startDetail = (invoice: Invoice) => { 
-    console.log('🔍 Starting detail view for invoice:', invoice);
-    
-    setSelectedInvoice(invoice); 
+    const normalizedInvoice = normalizeInvoice(invoice);
+
+    setSelectedInvoice(normalizedInvoice); 
     setView("detail"); 
     
     // Populate form with invoice data for read-only view
     const populatedFormData = {
-      customer_id: invoice.customer_id || "",
-      invoice_date: invoice.invoice_date || new Date().toISOString().slice(0, 10),
-      due_date: invoice.due_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      status: invoice.status || "DRAFT",
-      payment_terms: invoice.payment_terms || "NET_30",
-      notes: invoice.notes || "",
-      terms_and_conditions: invoice.terms_and_conditions || "",
+      customer_id: normalizedInvoice.customer_id || "",
+      invoice_date: toDateInputValue(normalizedInvoice.invoice_date) || new Date().toISOString().slice(0, 10),
+      due_date: toDateInputValue(normalizedInvoice.due_date) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      status: normalizedInvoice.status || "DRAFT",
+      payment_terms: normalizedInvoice.payment_terms || "NET_30",
+      notes: normalizedInvoice.notes || "",
+      terms_and_conditions: normalizedInvoice.terms_and_conditions || "",
       invoice_discount_rate: 0, // Not stored in database, only used for calculations
       invoice_discount_type: 'amount' as const // Default to amount since we store the actual discount amount
     };
     
-    console.log('✅ Populated form data:', populatedFormData);
     setFormData(populatedFormData);
     
     // Fetch and populate line items for this invoice
-    console.log('🔄 Fetching line items for invoice ID:', invoice.id);
-    fetchInvoiceLineItems(invoice.id);
+    fetchInvoiceLineItems(normalizedInvoice.id);
   };
   const backToList = () => { setSelectedInvoice(null); setView("list"); };
 
   return (
     <AppLayout title="Sales Invoices">
-      <SEO title="Sales Invoices — FMS" description="Create and manage sales invoices with line items, taxes, and discounts." />
+      <SEO title="Sales Invoices أ¢â‚¬â€‌ FMS" description="Create and manage sales invoices with line items, taxes, and discounts." />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -795,14 +786,14 @@ const Invoices = () => {
                           <div>
                             <h3 className="font-semibold">Invoice #{invoice.invoice_number}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(invoice.invoice_date).toLocaleDateString()} • {invoice.status}
+                              {formatDisplayDate(invoice.invoice_date)} أ¢â‚¬آ¢ {invoice.status}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
                             {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}
-                            {invoice.total_amount?.toFixed(2) || '0.00'}
+                            {toNumber(invoice.total_amount).toFixed(2)}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {customers.find(c => c.id === invoice.customer_id)?.name || 'Unknown Customer'}
@@ -1423,7 +1414,7 @@ const Invoices = () => {
                       <Input
                         type="number"
                         step="0.01"
-                        value={(selectedInvoice?.discount_amount || 0).toFixed(2)}
+                        value={toNumber(selectedInvoice?.discount_amount).toFixed(2)}
                         disabled
                         className="bg-white"
                       />
@@ -1446,20 +1437,20 @@ const Invoices = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Subtotal:</span>
-                        <span>${(selectedInvoice?.subtotal || 0).toFixed(2)}</span>
+                        <span>${toNumber(selectedInvoice?.subtotal).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Tax Amount:</span>
-                        <span>${(selectedInvoice?.tax_amount || 0).toFixed(2)}</span>
+                        <span>${toNumber(selectedInvoice?.tax_amount).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Total Discount:</span>
-                        <span>${(selectedInvoice?.discount_amount || 0).toFixed(2)}</span>
+                        <span>${toNumber(selectedInvoice?.discount_amount).toFixed(2)}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total Amount:</span>
-                        <span>${(selectedInvoice?.total_amount || 0).toFixed(2)}</span>
+                        <span>${toNumber(selectedInvoice?.total_amount).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -1474,3 +1465,7 @@ const Invoices = () => {
 };
 
 export default Invoices;
+
+
+
+

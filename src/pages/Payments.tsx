@@ -9,12 +9,12 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSupabase } from "@/contexts/SupabaseContext";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
 import { useDatabase } from "@/hooks/useDatabase";
 import { useAccounting } from "@/state/accounting";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, FileText, Calendar, Building2, DollarSign, ArrowLeft, ArrowUpRight, ArrowDownLeft, CreditCard, Banknote } from "lucide-react";
-import type { Database } from "@/lib/supabase";
+import type { Database } from "@/lib/database-types";
 
 type ViewMode = "list" | "add" | "detail";
 type PaymentType = "receive" | "pay";
@@ -80,8 +80,13 @@ interface PaymentFormData {
   currency: string;
 }
 
+const toNumber = (value: unknown) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const Payments = () => {
-  const { supabase } = useSupabase();
+  const { supabase } = useDatabaseContext();
   const { toast } = useToast();
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies');
   const { state } = useAccounting();
@@ -113,7 +118,7 @@ const Payments = () => {
     amount: 0,
     notes: "",
     status: "COMPLETED",
-    currency: "USD"
+    currency: "LYD"
   });
 
   // Fetch companies first
@@ -153,7 +158,6 @@ const Payments = () => {
       }
 
       // Set the payments data
-      console.log('Fetched payments:', paymentsData);
       setPayments(paymentsData || []);
     } catch (err) {
       console.error('Error fetching payments:', err);
@@ -356,8 +360,8 @@ const Payments = () => {
         invoice_id: formData.invoice_id || null,
         company_id: activeCompany.id,
         payment_date: formData.payment_date,
-        payment_method: paymentMethods.find(pm => pm.id === formData.payment_method)?.name || '',
-        payment_method_id: formData.payment_method,
+        payment_method: paymentMethods.find(pm => pm.id === formData.payment_method_id)?.name || '',
+        payment_method_id: formData.payment_method_id,
         reference_number: formData.reference_number || `REF-${Date.now()}`,
         amount: formData.amount,
         notes: formData.notes,
@@ -365,7 +369,6 @@ const Payments = () => {
         currency: 'LYD'
       };
       
-             console.log('Saving payment data:', paymentData);
        const { data: payment, error: paymentError } = await supabase
          .from('payments')
          .insert([paymentData])
@@ -418,11 +421,13 @@ const Payments = () => {
       supplier_id: "",
       invoice_id: "",
       payment_date: new Date().toISOString().slice(0, 10),
-      payment_method: "BANK_TRANSFER",
+      payment_method: "",
+      payment_method_id: "",
       reference_number: "",
       amount: 0,
       notes: "",
-      status: "COMPLETED"
+      status: "COMPLETED",
+      currency: "LYD"
     });
   };
 
@@ -441,7 +446,7 @@ const Payments = () => {
   if (view === 'add') {
   return (
       <AppLayout title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment`}>
-        <SEO title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment — FinanceHub`} description={`${activeTab === 'receive' ? 'Receive payment from customer' : 'Make payment to supplier'}`} />
+        <SEO title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment أ¢â‚¬â€‌ FinanceHub`} description={`${activeTab === 'receive' ? 'Receive payment from customer' : 'Make payment to supplier'}`} />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -531,7 +536,7 @@ const Payments = () => {
                            })
                            .map(inv => (
                              <SelectItem key={inv.id} value={inv.id}>
-                               {inv.invoice_number} - ${inv.total_amount?.toFixed(2)}
+                               {inv.invoice_number} - ${toNumber(inv.total_amount).toFixed(2)}
                              </SelectItem>
                            ))}
                 </SelectContent>
@@ -539,7 +544,7 @@ const Payments = () => {
                   </div>
                   <div>
                     <Label>Payment Method</Label>
-                    <Select value={formData.payment_method} onValueChange={(value) => setFormData({...formData, payment_method: value})}>
+                    <Select value={formData.payment_method_id} onValueChange={(value) => setFormData({...formData, payment_method_id: value})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -606,7 +611,7 @@ const Payments = () => {
   if (view === 'detail' && selectedPayment) {
     return (
       <AppLayout title={`Payment #${selectedPayment.reference_number}`}>
-        <SEO title={`Payment #${selectedPayment.reference_number} — FinanceHub`} description="View payment details" />
+        <SEO title={`Payment #${selectedPayment.reference_number} أ¢â‚¬â€‌ FinanceHub`} description="View payment details" />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -700,7 +705,7 @@ const Payments = () => {
             <CardContent>
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary">
-                  ${selectedPayment.amount?.toFixed(2) || '0.00'}
+                  ${toNumber(selectedPayment.amount).toFixed(2)}
                   </div>
                 <p className="text-muted-foreground mt-2">
                   {selectedPayment.payment_type === 'RECEIVE' ? 'Received from customer' : 'Paid to supplier'}
@@ -715,7 +720,7 @@ const Payments = () => {
 
   return (
     <AppLayout title="Payments">
-      <SEO title="Payments — FinanceHub" description="Manage customer and supplier payments" />
+      <SEO title="Payments أ¢â‚¬â€‌ FinanceHub" description="Manage customer and supplier payments" />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -772,12 +777,12 @@ const Payments = () => {
                               <div>
                                 <h3 className="font-semibold">Payment #{payment.reference_number}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  {new Date(payment.payment_date).toLocaleDateString()} • {payment.payment_method}
+                                  {new Date(payment.payment_date).toLocaleDateString()} أ¢â‚¬آ¢ {payment.payment_method}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-green-600">+${payment.amount?.toFixed(2) || '0.00'}</div>
+                              <div className="font-semibold text-green-600">+${toNumber(payment.amount).toFixed(2)}</div>
                               <p className="text-sm text-muted-foreground">
                                 {customers.find(c => c.id === payment.customer_id)?.name || 'Unknown Customer'}
                               </p>
@@ -823,12 +828,12 @@ const Payments = () => {
                               <div>
                                 <h3 className="font-semibold">Payment #{payment.reference_number}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  {new Date(payment.payment_date).toLocaleDateString()} • {payment.payment_method}
+                                  {new Date(payment.payment_date).toLocaleDateString()} أ¢â‚¬آ¢ {payment.payment_method}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-red-600">-${payment.amount?.toFixed(2) || '0.00'}</div>
+                              <div className="font-semibold text-red-600">-${toNumber(payment.amount).toFixed(2)}</div>
                               <p className="text-sm text-muted-foreground">
                                 {suppliers.find(s => s.id === payment.supplier_id)?.name || 'Unknown Supplier'}
                               </p>
@@ -858,3 +863,4 @@ const Payments = () => {
 };
 
 export default Payments;
+

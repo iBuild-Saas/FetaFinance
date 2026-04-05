@@ -1,119 +1,206 @@
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useAccounting, useActiveCompany } from "@/state/accounting";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useDatabaseContext } from "@/contexts/DatabaseContext";
+import { useDatabase } from "@/hooks/useDatabase";
+import { useAccounting } from "@/state/accounting";
 import { Calculator, Scale } from "lucide-react";
 
+type TrialBalanceRow = {
+  account_id: string;
+  account_code: string;
+  account_name: string;
+  account_type: string;
+  debit_total: number;
+  credit_total: number;
+  balance: number;
+};
+
+const money = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value || 0);
+
 const TrialBalance = () => {
+  const { t, i18n } = useTranslation();
+  const { supabase } = useDatabaseContext();
+  const { data: companies } = useDatabase("companies");
   const { state } = useAccounting();
-  const company = useActiveCompany();
+  const locale = i18n.language === "ar" ? "ar" : "en-US";
 
-  const accounts = state.accounts.filter(a => a.companyId === state.activeCompanyId);
-  const journalEntries = state.journals.filter(j => j.companyId === state.activeCompanyId);
+  const activeCompany = useMemo(
+    () => companies?.find((company) => company.id === state.activeCompanyId) || null,
+    [companies, state.activeCompanyId],
+  );
 
-  const getAccountBalance = (accountId: string) => {
-    let debitTotal = 0;
-    let creditTotal = 0;
+  const [asOfDate, setAsOfDate] = useState(new Date().toISOString().slice(0, 10));
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<TrialBalanceRow[]>([]);
 
-    journalEntries.forEach(je => {
-      je.lines.forEach(line => {
-        if (line.accountId === accountId) {
-          debitTotal += line.debit || 0;
-          creditTotal += line.credit || 0;
-        }
+  const loadTrialBalance = async () => {
+    if (!activeCompany?.id) {
+      setRows([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await supabase.rpc("get_company_trial_balance", {
+        company_uuid: activeCompany.id,
+        start_date: "2023-01-01",
+        end_date: asOfDate,
       });
-    });
-
-    return { debitTotal, creditTotal, balance: debitTotal - creditTotal };
+      setRows((data || []) as TrialBalanceRow[]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const trialBalanceData = accounts.map(account => ({
-    ...account,
-    ...getAccountBalance(account.id)
-  })).filter(account => account.debitTotal > 0 || account.creditTotal > 0);
+  useEffect(() => {
+    void loadTrialBalance();
+  }, [activeCompany?.id]);
 
-  const totalDebits = trialBalanceData.reduce((sum, account) => sum + account.debitTotal, 0);
-  const totalCredits = trialBalanceData.reduce((sum, account) => sum + account.creditTotal, 0);
-  const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01;
+  const totals = rows.reduce(
+    (acc, row) => ({
+      debits: acc.debits + Number(row.debit_total || 0),
+      credits: acc.credits + Number(row.credit_total || 0),
+    }),
+    { debits: 0, credits: 0 },
+  );
+  const isBalanced = Math.abs(totals.debits - totals.credits) < 0.01;
 
   return (
-    <AppLayout title="Trial Balance">
-      <SEO title="Trial Balance — FinanceHub" description="View trial balance to verify accounting equation" />
-      
-      <div className="flex items-center gap-3 mb-6">
-        <Scale className="w-6 h-6 text-primary" />
-        <span className="text-lg font-medium">Trial Balance</span>
-        {isBalanced ? (
-          <Badge className="bg-success-light text-success">Balanced</Badge>
-        ) : (
-          <Badge variant="destructive">Out of Balance</Badge>
-        )}
-      </div>
+    <AppLayout title={t("modules.trialBalance")}>
+      <SEO title={`${t("modules.trialBalance")} - FinanceHub`} description={t("trialBalancePage.description")} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="w-5 h-5" />
-            Trial Balance - {company?.name || 'No Company Selected'}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            As of {new Date().toLocaleDateString()}
-          </p>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Account Code</TableHead>
-                <TableHead>Account Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Debit</TableHead>
-                <TableHead className="text-right">Credit</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {trialBalanceData.length === 0 ? (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{activeCompany?.name || t("company.selectCompany")}</Badge>
+                <Badge variant={isBalanced ? "outline" : "destructive"}>
+                  {isBalanced ? t("trialBalancePage.balanced") : t("trialBalancePage.outOfBalance")}
+                </Badge>
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em]">{t("trialBalancePage.heroTitle")}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t("trialBalancePage.heroDescription")}</p>
+            </div>
+
+            <div className="flex gap-3">
+              <div>
+                <Label>{t("trialBalancePage.asOfDate")}</Label>
+                <Input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} />
+              </div>
+              <div className="flex items-end">
+                <Button onClick={() => void loadTrialBalance()} disabled={!activeCompany || loading}>
+                  {loading ? t("common.loading") : t("common.refresh")}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <SummaryCard title={t("trialBalancePage.totalDebits")} value={money(totals.debits, locale)} />
+          <SummaryCard title={t("trialBalancePage.totalCredits")} value={money(totals.credits, locale)} />
+          <SummaryCard title={t("trialBalancePage.difference")} value={money(totals.debits - totals.credits, locale)} danger={!isBalanced} />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              {t("trialBalancePage.rowsTitle")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                    <Scale className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <div>
-                      <h3 className="font-medium mb-2">No transactions yet</h3>
-                      <p className="text-sm">Record some transactions to see the trial balance</p>
-                    </div>
-                  </TableCell>
+                  <TableHead>{t("trialBalancePage.accountCode")}</TableHead>
+                  <TableHead>{t("trialBalancePage.accountName")}</TableHead>
+                  <TableHead>{t("common.type")}</TableHead>
+                  <TableHead className="text-right">{t("ledger.debit")}</TableHead>
+                  <TableHead className="text-right">{t("ledger.credit")}</TableHead>
+                  <TableHead className="text-right">{t("trialBalancePage.difference")}</TableHead>
                 </TableRow>
-              ) : (
-                <>
-                  {trialBalanceData.map((account) => (
-                    <TableRow key={account.id} className="hover:bg-muted/50">
-                      <TableCell className="font-mono">{account.number}</TableCell>
-                      <TableCell>{account.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{account.type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {account.debitTotal > 0 ? `$${account.debitTotal.toFixed(2)}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {account.creditTotal > 0 ? `$${account.creditTotal.toFixed(2)}` : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="border-t-2 font-bold bg-muted/30">
-                    <TableCell colSpan={3}>TOTALS</TableCell>
-                    <TableCell className="text-right">${totalDebits.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${totalCredits.toFixed(2)}</TableCell>
+              </TableHeader>
+              <TableBody>
+                {!activeCompany ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      {t("trialBalancePage.selectCompany")}
+                    </TableCell>
                   </TableRow>
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      {t("trialBalancePage.loadingBalances")}
+                    </TableCell>
+                  </TableRow>
+                ) : rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      {t("trialBalancePage.noActivity")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <>
+                    {rows.map((row) => (
+                      <TableRow key={row.account_id}>
+                        <TableCell className="font-mono">{row.account_code}</TableCell>
+                        <TableCell>{row.account_name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{row.account_type}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{money(Number(row.debit_total || 0), locale)}</TableCell>
+                        <TableCell className="text-right">{money(Number(row.credit_total || 0), locale)}</TableCell>
+                        <TableCell className="text-right font-semibold">{money(Number(row.balance || 0), locale)}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="border-t-2 bg-muted/30 font-semibold">
+                      <TableCell colSpan={3}>{t("trialBalancePage.totals")}</TableCell>
+                      <TableCell className="text-right">{money(totals.debits, locale)}</TableCell>
+                      <TableCell className="text-right">{money(totals.credits, locale)}</TableCell>
+                      <TableCell className="text-right">{money(totals.debits - totals.credits, locale)}</TableCell>
+                    </TableRow>
+                  </>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </AppLayout>
   );
 };
+
+function SummaryCard({ title, value, danger = false }: { title: string; value: string; danger?: boolean }) {
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{title}</p>
+            <p className={`mt-3 text-3xl font-semibold tracking-[-0.03em] ${danger ? "text-red-600" : ""}`}>{value}</p>
+          </div>
+          <div className="metric-icon-shell flex h-11 w-11 items-center justify-center rounded-2xl">
+            <Scale className={`h-5 w-5 ${danger ? "text-red-600" : "text-primary"}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default TrialBalance;

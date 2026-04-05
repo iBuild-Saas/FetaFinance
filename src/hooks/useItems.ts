@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSupabase } from '@/contexts/SupabaseContext'
+import { db } from '@/lib/database-client'
 import { useDatabase } from './useDatabase'
 import { useAccounting } from '@/state/accounting'
 
@@ -83,7 +83,6 @@ export interface ItemFormData {
 }
 
 export function useItems() {
-  const { supabase, user } = useSupabase()
   const { data: companies, fetchAll: fetchCompanies } = useDatabase('companies')
   const { state } = useAccounting()
   const [items, setItems] = useState<Item[]>([])
@@ -92,101 +91,78 @@ export function useItems() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Get the active company from the navbar selection (same as Customers page)
   const activeCompany = companies?.find(c => c.id === state.activeCompanyId) || null
 
-  // Get company ID from active company
-  const getCompanyId = useCallback(() => {
-    console.log('Getting company ID:', { 
-      activeCompany, 
-      companies, 
-      stateActiveCompanyId: state.activeCompanyId,
-      foundCompany: companies?.find(c => c.id === state.activeCompanyId)
-    })
-    return activeCompany?.id
-  }, [activeCompany, companies, state.activeCompanyId])
+  const getCompanyId = useCallback(() => activeCompany?.id, [activeCompany?.id])
 
-  // Fetch companies first
   useEffect(() => {
     fetchCompanies()
   }, [fetchCompanies])
 
-  // Fetch all items for the current company
   const fetchItems = useCallback(async () => {
-    if (!getCompanyId()) return
+    const companyId = getCompanyId()
+    if (!companyId) return
 
     setLoading(true)
     setError(null)
 
     try {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('company_id', getCompanyId())
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
+      const { data, error } = await db.from('items').eq('company_id', companyId).select('*')
       if (error) throw error
-      setItems(data || [])
+
+      setItems(
+        (data || [])
+          .filter((item: Item) => item.is_active !== false)
+          .sort((a: Item, b: Item) => a.name.localeCompare(b.name))
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch items')
     } finally {
       setLoading(false)
     }
-  }, [supabase, getCompanyId])
+  }, [getCompanyId])
 
-  // Fetch item categories
   const fetchCategories = useCallback(async () => {
-    if (!getCompanyId()) return
+    const companyId = getCompanyId()
+    if (!companyId) return
 
     try {
-      console.log('Fetching categories for company:', getCompanyId())
-      const { data, error } = await supabase
-        .from('item_categories')
-        .select('*')
-        .eq('company_id', getCompanyId())
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
+      const { data, error } = await db.from('item_categories').eq('company_id', companyId).select('*')
       if (error) throw error
-      console.log('Categories fetched:', data)
-      setCategories(data || [])
+
+      setCategories(
+        (data || [])
+          .filter((category: ItemCategory) => category.is_active !== false)
+          .sort((a: ItemCategory, b: ItemCategory) => a.name.localeCompare(b.name))
+      )
     } catch (err) {
       console.error('Failed to fetch categories:', err)
+      setCategories([])
     }
-  }, [supabase, getCompanyId])
+  }, [getCompanyId])
 
-  // Fetch units of measure
   const fetchUnitsOfMeasure = useCallback(async () => {
-    if (!getCompanyId()) return
+    const companyId = getCompanyId()
+    if (!companyId) return
 
     try {
-      console.log('Fetching units of measure for company:', getCompanyId())
-      const { data, error } = await supabase
-        .from('item_units_of_measure')
-        .select('*')
-        .eq('company_id', getCompanyId())
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
+      const { data, error } = await db.from('item_units_of_measure').eq('company_id', companyId).select('*')
       if (error) throw error
-      console.log('Units of measure fetched:', data)
-      setUnitsOfMeasure(data || [])
+
+      setUnitsOfMeasure(
+        (data || [])
+          .filter((unit: ItemUnitOfMeasure) => unit.is_active !== false)
+          .sort((a: ItemUnitOfMeasure, b: ItemUnitOfMeasure) => a.name.localeCompare(b.name))
+      )
     } catch (err) {
       console.error('Failed to fetch units of measure:', err)
+      setUnitsOfMeasure([])
     }
-  }, [supabase, getCompanyId])
+  }, [getCompanyId])
 
-  // Create a new item
   const createItem = useCallback(async (itemData: ItemFormData): Promise<Item | null> => {
-    console.log('🔍 [DEBUG] ===== createItem FUNCTION STARTED =====')
-    console.log('🔍 [DEBUG] itemData received:', itemData)
-    
     const companyId = getCompanyId()
-    console.log('🔍 [DEBUG] createItem called with companyId:', companyId)
-    
     if (!companyId) {
-      console.error('🔍 [DEBUG] No company ID found, cannot create item')
       setError('No company selected. Please select a company first.')
       return null
     }
@@ -195,104 +171,61 @@ export function useItems() {
     setError(null)
 
     try {
-      // TEMPORARILY DISABLE: Generate item code if not provided
-      // This RPC function might not exist in your database yet
-      /*
-      if (!itemData.item_code) {
-        const { data: generatedCode, error: codeError } = await supabase
-          .rpc('generate_item_code', {
-            company_uuid: getCompanyId(),
-            category_name: itemData.category || 'General'
-          })
-
-        if (codeError) throw codeError
-        itemData.item_code = generatedCode
-      }
-      */
-      
-      // For now, just use a simple item code
-      if (!itemData.item_code) {
-        itemData.item_code = `ITEM-${Date.now()}`
-      }
-
-      // TEMPORARY FIX: Only send fields that currently exist in the database
-      // Note: item_code and unit_of_measure columns need to be added to the database first
       const insertData = {
+        item_code: itemData.item_code || `ITEM-${Date.now()}`,
         name: itemData.name,
         description: itemData.description || '',
+        category: itemData.category === 'none' ? null : itemData.category,
+        subcategory: itemData.subcategory || null,
+        unit_of_measure: itemData.unit_of_measure === 'none' ? null : itemData.unit_of_measure,
         unit_price: itemData.unit_price,
-        company_id: getCompanyId()
-      }
-      
-      // Add these fields only if the columns exist in the database
-      if (itemData.item_code) {
-        (insertData as any).item_code = itemData.item_code
-      }
-      if (itemData.unit_of_measure && itemData.unit_of_measure !== 'none') {
-        (insertData as any).unit_of_measure = itemData.unit_of_measure
-      }
-      
-      console.log('🔍 [DEBUG] ===== ABOUT TO INSERT =====')
-      console.log('🔍 [DEBUG] Attempting to insert item:', insertData)
-      console.log('🔍 [DEBUG] Company ID:', getCompanyId())
-      console.log('🔍 [DEBUG] Supabase client:', supabase)
-      
-      const { data, error } = await supabase
-        .from('items')
-        .insert([insertData])
-        .select()
-        .single()
-        
-      console.log('🔍 [DEBUG] Insert result:', { data, error })
-      
-      if (error) {
-        console.error('🔍 [DEBUG] ===== SUPABASE ERROR DETAILS =====')
-        console.error('🔍 [DEBUG] Error object:', error)
-        console.error('🔍 [DEBUG] Error message:', error.message)
-        console.error('🔍 [DEBUG] Error code:', error.code)
-        console.error('🔍 [DEBUG] Error details:', error.details)
-        console.error('🔍 [DEBUG] Error hint:', error.hint)
+        cost_price: itemData.cost_price ?? null,
+        selling_price: itemData.selling_price ?? null,
+        tax_rate: itemData.tax_rate ?? null,
+        min_stock_level: itemData.min_stock_level ?? null,
+        max_stock_level: itemData.max_stock_level ?? null,
+        current_stock: itemData.current_stock ?? 0,
+        reorder_point: itemData.reorder_point ?? null,
+        supplier_id: itemData.supplier_id || null,
+        company_id: companyId,
+        is_taxable: itemData.is_taxable,
+        is_inventory_item: itemData.is_inventory_item,
+        barcode: itemData.barcode || null,
+        sku: itemData.sku || null,
+        weight: itemData.weight ?? null,
+        dimensions: itemData.dimensions || null,
+        image_url: itemData.image_url || null,
+        notes: itemData.notes || null,
+        is_active: true
       }
 
+      const { data, error } = await db.from('items').insert(insertData)
       if (error) throw error
 
-      // Refresh items list
       await fetchItems()
-      return data
+      return (data as Item) || null
     } catch (err) {
-      console.error('🔍 [DEBUG] Error in createItem:', err)
-      if (err instanceof Error) {
-        console.error('🔍 [DEBUG] Error message:', err.message)
-        console.error('🔍 [DEBUG] Error stack:', err.stack)
-      }
       setError(err instanceof Error ? err.message : 'Failed to create item')
       return null
     } finally {
       setLoading(false)
     }
-  }, [supabase, getCompanyId, fetchItems])
+  }, [getCompanyId, fetchItems])
 
-  // Update an existing item
   const updateItem = useCallback(async (id: string, updates: Partial<ItemFormData>): Promise<boolean> => {
     setLoading(true)
     setError(null)
 
     try {
-      // Handle "none" values for category and unit_of_measure
       const processedUpdates = {
         ...updates,
         category: updates.category === "none" ? null : updates.category,
         unit_of_measure: updates.unit_of_measure === "none" ? null : updates.unit_of_measure
       }
-      
-      const { error } = await supabase
-        .from('items')
-        .update(processedUpdates)
-        .eq('id', id)
 
+      const { error } = await db.from('items').update(id, processedUpdates)
       if (error) throw error
 
-      // Refresh items list
       await fetchItems()
       return true
     } catch (err) {
@@ -301,22 +234,16 @@ export function useItems() {
     } finally {
       setLoading(false)
     }
-  }, [supabase, fetchItems])
+  }, [fetchItems])
 
-  // Delete an item (soft delete by setting is_active to false)
   const deleteItem = useCallback(async (id: string): Promise<boolean> => {
     setLoading(true)
     setError(null)
 
     try {
-      const { error } = await supabase
-        .from('items')
-        .update({ is_active: false })
-        .eq('id', id)
-
+      const { error } = await db.from('items').update(id, { is_active: false })
       if (error) throw error
 
-      // Refresh items list
       await fetchItems()
       return true
     } catch (err) {
@@ -325,49 +252,53 @@ export function useItems() {
     } finally {
       setLoading(false)
     }
-  }, [supabase, fetchItems])
+  }, [fetchItems])
 
-  // Update stock level
   const updateStock = useCallback(async (id: string, quantityChange: number): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .rpc('update_item_stock', {
-          item_uuid: id,
-          quantity_change: quantityChange
-        })
+      const existingItem = items.find(item => item.id === id)
+      if (!existingItem) {
+        throw new Error('Item not found')
+      }
+
+      const { error } = await db.from('items').update(id, {
+        current_stock: Number(existingItem.current_stock || 0) + quantityChange
+      })
 
       if (error) throw error
 
-      // Refresh items list
       await fetchItems()
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update stock')
       return false
     }
-  }, [supabase, fetchItems])
+  }, [items, fetchItems])
 
-  // Search items
   const searchItems = useCallback(async (query: string): Promise<Item[]> => {
-    if (!getCompanyId() || !query.trim()) return []
+    const companyId = getCompanyId()
+    if (!companyId || !query.trim()) return []
 
     try {
-      const { data, error } = await supabase
-        .from('active_items_view')
-        .select('*')
-        .eq('company_id', getCompanyId())
-        .or(`name.ilike.%${query}%,item_code.ilike.%${query}%,barcode.ilike.%${query}%,sku.ilike.%${query}%`)
-        .order('name', { ascending: true })
-
+      const { data, error } = await db.from('items').eq('company_id', companyId).select('*')
       if (error) throw error
-      return data || []
+
+      const normalizedQuery = query.trim().toLowerCase()
+      return (data || [])
+        .filter((item: Item) => item.is_active !== false)
+        .filter((item: Item) =>
+          item.name?.toLowerCase().includes(normalizedQuery) ||
+          item.item_code?.toLowerCase().includes(normalizedQuery) ||
+          item.barcode?.toLowerCase().includes(normalizedQuery) ||
+          item.sku?.toLowerCase().includes(normalizedQuery)
+        )
+        .sort((a: Item, b: Item) => a.name.localeCompare(b.name))
     } catch (err) {
       console.error('Failed to search items:', err)
       return []
     }
-  }, [supabase, getCompanyId])
+  }, [getCompanyId])
 
-  // Get items by category
   const getItemsByCategory = useCallback((category: string): Item[] => {
     if (category === "none") {
       return items.filter(item => !item.category || item.category === "none")
@@ -375,22 +306,24 @@ export function useItems() {
     return items.filter(item => item.category === category)
   }, [items])
 
-  // Get low stock items
   const getLowStockItems = useCallback((): Item[] => {
-    return items.filter(item => 
-      item.is_inventory_item && 
-      item.current_stock !== undefined && 
+    return items.filter(item =>
+      item.is_inventory_item &&
+      item.current_stock !== undefined &&
       item.min_stock_level !== undefined &&
       item.current_stock <= item.min_stock_level
     )
   }, [items])
 
-  // Fetch data when active company changes
   useEffect(() => {
     if (activeCompany) {
       fetchItems()
       fetchCategories()
       fetchUnitsOfMeasure()
+    } else {
+      setItems([])
+      setCategories([])
+      setUnitsOfMeasure([])
     }
   }, [activeCompany, fetchItems, fetchCategories, fetchUnitsOfMeasure])
 
