@@ -446,7 +446,7 @@ const Payments = () => {
   if (view === 'add') {
   return (
       <AppLayout title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment`}>
-        <SEO title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment أ¢â‚¬â€‌ FinanceHub`} description={`${activeTab === 'receive' ? 'Receive payment from customer' : 'Make payment to supplier'}`} />
+        <SEO title={`${activeTab === 'receive' ? 'Receive' : 'Make'} Payment - FinanceHub`} description={`${activeTab === 'receive' ? 'Receive payment from customer' : 'Make payment to supplier'}`} />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -611,7 +611,7 @@ const Payments = () => {
   if (view === 'detail' && selectedPayment) {
     return (
       <AppLayout title={`Payment #${selectedPayment.reference_number}`}>
-        <SEO title={`Payment #${selectedPayment.reference_number} أ¢â‚¬â€‌ FinanceHub`} description="View payment details" />
+        <SEO title={`Payment #${selectedPayment.reference_number} - FinanceHub`} description="View payment details" />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -720,7 +720,7 @@ const Payments = () => {
 
   return (
     <AppLayout title="Payments">
-      <SEO title="Payments أ¢â‚¬â€‌ FinanceHub" description="Manage customer and supplier payments" />
+      <SEO title="Payments - FinanceHub" description="Manage customer and supplier payments" />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -777,7 +777,7 @@ const Payments = () => {
                               <div>
                                 <h3 className="font-semibold">Payment #{payment.reference_number}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  {new Date(payment.payment_date).toLocaleDateString()} أ¢â‚¬آ¢ {payment.payment_method}
+                                  {new Date(payment.payment_date).toLocaleDateString()} - {payment.payment_method}
                                 </p>
                               </div>
                             </div>
@@ -828,7 +828,7 @@ const Payments = () => {
                               <div>
                                 <h3 className="font-semibold">Payment #{payment.reference_number}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  {new Date(payment.payment_date).toLocaleDateString()} أ¢â‚¬آ¢ {payment.payment_method}
+                                  {new Date(payment.payment_date).toLocaleDateString()} - {payment.payment_method}
                                 </p>
                               </div>
                             </div>

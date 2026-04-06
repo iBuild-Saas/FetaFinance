@@ -232,6 +232,7 @@ const Ledger = () => {
         .gte('entry_date', startDate)
         .lte('entry_date', endDate)
         .eq('is_active', true)
+        .eq('status', 'POSTED')
         .order('entry_date', { ascending: true });
 
       const linesResult = await supabase
@@ -340,7 +341,7 @@ const Ledger = () => {
   if (!activeCompany) {
     return (
       <AppLayout title="General Ledger">
-        <SEO title="General Ledger أ¢â‚¬â€‌ FinanceHub" description="View detailed account activity and balances" />
+        <SEO title="General Ledger - FinanceHub" description="View detailed account activity and balances" />
         <div className="text-center py-8">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Select a Company</h3>
@@ -352,7 +353,7 @@ const Ledger = () => {
 
   return (
     <AppLayout title="General Ledger">
-      <SEO title="General Ledger أ¢â‚¬â€‌ FinanceHub" description="View detailed account activity and balances" />
+      <SEO title="General Ledger - FinanceHub" description="View detailed account activity and balances" />
       
       <div className="space-y-6">
         {/* Header */}
@@ -403,7 +404,7 @@ const Ledger = () => {
                       <SelectContent>
                         {accounts.map(account => (
                           <SelectItem key={account.id} value={account.id}>
-                            {account.account_code} أ¢â‚¬â€‌ {account.account_name}
+                            {account.account_code} - {account.account_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -439,7 +440,7 @@ const Ledger = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>
-                      Account Ledger: {selectedAccountData?.account_code} أ¢â‚¬â€‌ {selectedAccountData?.account_name}
+                      Account Ledger: {selectedAccountData?.account_code} - {selectedAccountData?.account_name}
                     </span>
                     <Badge variant="outline">
                       {selectedAccountData?.account_type} ({selectedAccountData?.normal_balance})
@@ -477,15 +478,15 @@ const Ledger = () => {
                             <TableRow key={`${entry.entry_number}-${entry.line_number || Math.random()}`} className="hover:bg-muted/50">
                               <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                               <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
-                              <TableCell className="text-sm">{entry.reference || 'أ¢â‚¬â€‌'}</TableCell>
+                              <TableCell className="text-sm">{entry.reference || '-'}</TableCell>
                               <TableCell className="text-sm">
-                                {entry.line_description || entry.journal_memo || 'أ¢â‚¬â€‌'}
+                                {entry.line_description || entry.journal_memo || '-'}
                               </TableCell>
                               <TableCell className="text-right font-medium">
-                                {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                                {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : '-'}
                               </TableCell>
                               <TableCell className="text-right font-medium">
-                                {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                                {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : '-'}
                               </TableCell>
                               <TableCell className="text-right font-bold">
                                 ${toNumber(entry.running_balance).toFixed(2)}
@@ -579,14 +580,14 @@ const Ledger = () => {
                           <TableCell className="font-medium text-primary">
                             {new Date(startDate).toLocaleDateString()}
                           </TableCell>
-                          <TableCell className="font-medium text-primary">أ¢â‚¬â€‌</TableCell>
+                          <TableCell className="font-medium text-primary">-</TableCell>
                           <TableCell className="font-medium text-primary">Opening Balance</TableCell>
-                          <TableCell className="font-medium text-primary">أ¢â‚¬â€‌</TableCell>
+                          <TableCell className="font-medium text-primary">-</TableCell>
                           <TableCell className="text-right font-medium text-primary">
-                            {openingBalance > 0 ? `$${openingBalance.toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                            {openingBalance > 0 ? `$${openingBalance.toFixed(2)}` : '-'}
                           </TableCell>
                           <TableCell className="text-right font-medium text-primary">
-                            {openingBalance < 0 ? `$${Math.abs(openingBalance).toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                            {openingBalance < 0 ? `$${Math.abs(openingBalance).toFixed(2)}` : '-'}
                           </TableCell>
                         </TableRow>
                       )}
@@ -603,16 +604,16 @@ const Ledger = () => {
                             <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
                             <TableCell className="font-mono text-sm">{entry.entry_number}</TableCell>
                             <TableCell className="text-sm">
-                              {entry.account_code} أ¢â‚¬â€‌ {entry.account_name}
+                              {entry.account_code} - {entry.account_name}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {entry.line_description || entry.journal_memo || 'أ¢â‚¬â€‌'}
+                              {entry.line_description || entry.journal_memo || '-'}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                              {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : '-'}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : 'أ¢â‚¬â€‌'}
+                              {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : '-'}
                             </TableCell>
                           </TableRow>
                         ))

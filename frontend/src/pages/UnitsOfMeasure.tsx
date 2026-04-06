@@ -223,7 +223,7 @@ export default function UnitsOfMeasure() {
 
   return (
     <AppLayout title="Units of Measure">
-      <SEO title="Units of Measure â€” FMS" description="Manage units of measurement for items" />
+      <SEO title="Units of Measure - FMS" description="Manage units of measurement for items" />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

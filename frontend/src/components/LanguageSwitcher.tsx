@@ -24,7 +24,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   const { language, changeLanguage, isRTL } = useLanguage();
   const languages: { code: Language; name: string; nativeName: string }[] = [
     { code: 'en', name: t('language.english'), nativeName: 'English' },
-    { code: 'ar', name: t('language.arabic'), nativeName: 'العربية' },
+    { code: 'ar', name: t('language.arabic'), nativeName: 'Arabic' },
   ];
 
   const handleLanguageChange = (newLanguage: Language) => {

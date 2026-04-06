@@ -275,7 +275,7 @@ const AccountMappings = () => {
   if (!activeCompany) {
     return (
       <AppLayout title={t("accountMappings.title")}>
-        <SEO title={`${t("accountMappings.title")} â€” FinanceHub`} description={t("accountMappings.description")} />
+        <SEO title={`${t("accountMappings.title")} - FinanceHub`} description={t("accountMappings.description")} />
         <div className="text-center py-8">
           <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">{t("accountMappings.selectCompany")}</h3>
@@ -287,7 +287,7 @@ const AccountMappings = () => {
 
   return (
     <AppLayout title={t("accountMappings.title")}>
-      <SEO title={`${t("accountMappings.title")} â€” FinanceHub`} description={t("accountMappings.description")} />
+      <SEO title={`${t("accountMappings.title")} - FinanceHub`} description={t("accountMappings.description")} />
       
       <div className="space-y-6">
         {/* Header */}

@@ -561,7 +561,8 @@ export class DatabaseClient {
     const entries = (entriesResult.data || []).filter((entry: any) =>
       (!startDate || entry.entry_date >= startDate) &&
       (!endDate || entry.entry_date <= endDate) &&
-      (entry.is_active !== false)
+      (entry.is_active !== false) &&
+      entry.status === 'POSTED'
     );
     const entryMap = new Map(entries.map((entry: any) => [entry.id, entry]));
     const accountMap = new Map((accountsResult.data || []).map((account: any) => [account.id, account]));
@@ -610,7 +611,7 @@ export class DatabaseClient {
     }
 
     const validEntries = new Set((entriesResult.data || [])
-      .filter((entry: any) => (!endDate || entry.entry_date <= endDate) && entry.is_active !== false)
+      .filter((entry: any) => (!endDate || entry.entry_date <= endDate) && entry.is_active !== false && entry.status === 'POSTED')
       .map((entry: any) => entry.id));
 
     const grouped = new Map<string, any>();
@@ -735,6 +736,7 @@ export class DatabaseClient {
     const validEntries = new Set((entriesResult.data || [])
       .filter((entry: any) =>
         entry.is_active !== false &&
+        entry.status === 'POSTED' &&
         (!startDate || entry.entry_date >= startDate) &&
         (!endDate || entry.entry_date <= endDate)
       )

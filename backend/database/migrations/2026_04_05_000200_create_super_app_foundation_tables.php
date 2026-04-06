@@ -370,6 +370,7 @@ return new class extends Migration
                 existing_rows.average_cost = GREATEST(existing_rows.average_cost, null_rows.average_cost),
                 existing_rows.last_cost = GREATEST(existing_rows.last_cost, null_rows.last_cost)
             WHERE existing_rows.warehouse_id = default_warehouses.id
+              AND existing_rows.id <> null_rows.id
         ");
         DB::statement("
             DELETE null_rows
@@ -382,6 +383,7 @@ return new class extends Migration
              AND existing_rows.item_id = null_rows.item_id
              AND existing_rows.warehouse_id = default_warehouses.id
             WHERE null_rows.warehouse_id IS NULL
+              AND existing_rows.id <> null_rows.id
         ");
         DB::statement("
             UPDATE stock_items si

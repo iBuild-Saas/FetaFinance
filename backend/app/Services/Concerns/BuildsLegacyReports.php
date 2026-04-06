@@ -84,7 +84,7 @@ trait BuildsLegacyReports
               COALESCE(SUM(jel.credit_amount), 0) AS total_credits
             FROM journal_entries je
             JOIN journal_entry_lines jel ON jel.journal_entry_id = je.id
-            WHERE je.company_id = ? AND je.is_active = 1
+            WHERE je.company_id = ? AND je.is_active = 1 AND je.status = 'POSTED'
         ", [$companyId]);
         $cashRows = DB::selectOne("
             SELECT COALESCE(SUM(jel.debit_amount - jel.credit_amount), 0) AS cash_balance
@@ -93,6 +93,7 @@ trait BuildsLegacyReports
             JOIN chart_of_accounts coa ON coa.id = jel.account_id
             WHERE je.company_id = ?
               AND je.is_active = 1
+              AND je.status = 'POSTED'
               AND (
                 coa.account_code IN ('1000', '1010')
                 OR coa.account_name LIKE '%Cash%'
@@ -286,7 +287,7 @@ trait BuildsLegacyReports
             SELECT COALESCE(SUM(jel.debit_amount), 0) - COALESCE(SUM(jel.credit_amount), 0) AS difference
             FROM journal_entries je
             JOIN journal_entry_lines jel ON jel.journal_entry_id = je.id
-            WHERE je.company_id = ? AND je.is_active = 1
+            WHERE je.company_id = ? AND je.is_active = 1 AND je.status = 'POSTED'
         ", [$companyId]);
         $negativeStockRows = DB::selectOne("
             SELECT COUNT(*) AS count
@@ -359,7 +360,7 @@ trait BuildsLegacyReports
         $endDate = $params['p_end_date'] ?? null;
 
         $entries = collect(DB::table('journal_entries')->where('company_id', $companyId)->get())
-            ->filter(fn ($entry) => (!$startDate || $entry->entry_date >= $startDate) && (!$endDate || $entry->entry_date <= $endDate) && $entry->is_active !== 0)
+            ->filter(fn ($entry) => (!$startDate || $entry->entry_date >= $startDate) && (!$endDate || $entry->entry_date <= $endDate) && $entry->is_active !== 0 && ($entry->status ?? null) === 'POSTED')
             ->values();
         $entryMap = [];
         foreach ($entries as $entry) {
@@ -413,7 +414,7 @@ trait BuildsLegacyReports
         $endDate = $params['end_date'] ?? ($params['p_as_of_date'] ?? null);
 
         $entries = collect(DB::table('journal_entries')->where('company_id', $companyId)->get())
-            ->filter(fn ($entry) => (!$endDate || $entry->entry_date <= $endDate) && $entry->is_active !== 0)
+            ->filter(fn ($entry) => (!$endDate || $entry->entry_date <= $endDate) && $entry->is_active !== 0 && ($entry->status ?? null) === 'POSTED')
             ->pluck('id')
             ->flip()
             ->all();
@@ -540,7 +541,7 @@ trait BuildsLegacyReports
     private function buildStatement(?string $companyId, ?string $startDate, ?string $endDate, array $accountTypes): array
     {
         $validEntries = collect(DB::table('journal_entries')->where('company_id', $companyId)->get())
-            ->filter(fn ($entry) => $entry->is_active !== 0 && (!$startDate || $entry->entry_date >= $startDate) && (!$endDate || $entry->entry_date <= $endDate))
+            ->filter(fn ($entry) => $entry->is_active !== 0 && ($entry->status ?? null) === 'POSTED' && (!$startDate || $entry->entry_date >= $startDate) && (!$endDate || $entry->entry_date <= $endDate))
             ->pluck('id')
             ->flip()
             ->all();

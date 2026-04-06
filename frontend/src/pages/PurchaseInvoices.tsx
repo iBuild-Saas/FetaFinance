@@ -554,7 +554,7 @@ const PurchaseInvoices = () => {
         setSelectedInvoice(normalizePurchaseInvoice({ ...selectedInvoice, status: newStatus }));
       }
     } catch (err) {
-      console.error('أ¢â€Œإ’ Status update error:', err);
+      console.error('Status update error:', err);
       let errorMessage = 'Unknown error occurred';
       
       if (err instanceof Error) {
@@ -594,7 +594,7 @@ const PurchaseInvoices = () => {
   if (view === 'add') {
     return (
       <AppLayout title={t("purchaseInvoice.title")}>
-        <SEO title={`${t("purchaseInvoice.title")} أ¢â‚¬â€‌ FinanceHub`} description="Create new purchase invoice for supplier purchases" />
+        <SEO title={`${t("purchaseInvoice.title")} - FinanceHub`} description="Create new purchase invoice for supplier purchases" />
         
         <div className="space-y-6">
           <Card className="mb-4">
@@ -643,9 +643,9 @@ const PurchaseInvoices = () => {
                     </span>
                   </div>
                   <p className="text-xs text-green-600 mt-1">
-                    أ¢â‚¬آ¢ <strong>SUBMITTED:</strong> Invoice created, no journal entry yet
-                    أ¢â‚¬آ¢ <strong>RECEIVED:</strong> Auto journal entry created + stock updated
-                    أ¢â‚¬آ¢ <strong>PAID:</strong> Auto journal entry created + stock updated
+                    - <strong>SUBMITTED:</strong> Invoice created, no journal entry yet
+                    - <strong>RECEIVED:</strong> Auto journal entry created + stock updated
+                    - <strong>PAID:</strong> Auto journal entry created + stock updated
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -695,12 +695,12 @@ const PurchaseInvoices = () => {
                     </Select>
                     {formData.status === 'RECEIVED' && (
                       <p className="text-xs text-green-600 mt-1">
-                        أ¢إ“â€œ Stock quantities will be updated and movements recorded
+                        - Stock quantities will be updated and movements recorded
                       </p>
                     )}
                     {formData.status === 'SUBMITTED' && (
                       <p className="text-xs text-blue-600 mt-1">
-                        أ¢إ“â€œ Journal entry will be created automatically
+                        - Journal entry will be created automatically
                       </p>
                     )}
                   </div>
@@ -935,7 +935,7 @@ const PurchaseInvoices = () => {
    if (view === 'detail' && selectedInvoice) {
      return (
        <AppLayout title={`Purchase Invoice #${selectedInvoice.invoice_number}`}>
-         <SEO title={`Purchase Invoice #${selectedInvoice.invoice_number} أ¢â‚¬â€‌ FinanceHub`} description="View purchase invoice details" />
+         <SEO title={`Purchase Invoice #${selectedInvoice.invoice_number} - FinanceHub`} description="View purchase invoice details" />
          
          <div className="space-y-6">
            <Card className="mb-4">
@@ -1049,8 +1049,8 @@ const PurchaseInvoices = () => {
                          <p className="text-sm">{item.description || 'N/A'}</p>
                        </div>
                        <div>
-                         <Label className="text-sm font-medium text-muted-foreground">Qty ط£â€” Price</Label>
-                         <p>{item.quantity} ط£â€” {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{item.unit_price?.toFixed(2)}</p>
+                         <Label className="text-sm font-medium text-muted-foreground">Qty - Price</Label>
+                         <p>{item.quantity} - {activeCompany?.currency === 'lyd' ? 'LYD ' : activeCompany?.currency === 'usd' ? '$' : activeCompany?.currency?.toUpperCase() + ' '}{item.unit_price?.toFixed(2)}</p>
                        </div>
                        <div>
                          <Label className="text-sm font-medium text-muted-foreground">Line Total</Label>
@@ -1097,7 +1097,7 @@ const PurchaseInvoices = () => {
 
    return (
     <AppLayout title="Purchase Invoices">
-      <SEO title="Purchase Invoices أ¢â‚¬â€‌ FinanceHub" description="Manage purchase invoices and supplier procurement" />
+      <SEO title="Purchase Invoices - FinanceHub" description="Manage purchase invoices and supplier procurement" />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -1149,7 +1149,7 @@ const PurchaseInvoices = () => {
                           <div>
                             <h3 className="font-semibold">Invoice #{invoice.invoice_number}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(invoice.invoice_date).toLocaleDateString()} أ¢â‚¬آ¢ {invoice.status}
+                              {new Date(invoice.invoice_date).toLocaleDateString()} - {invoice.status}
                             </p>
                           </div>
                         </div>

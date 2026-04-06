@@ -274,7 +274,7 @@ const StockReconciliation = () => {
     if (varianceQty === 0) {
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          âœ“ No Change
+          No Change
         </Badge>
       );
     } else if (varianceQty > 0) {
@@ -297,7 +297,7 @@ const StockReconciliation = () => {
 
   return (
     <AppLayout title="Stock Reconciliation">
-      <SEO title="Stock Reconciliation â€” FMS" description="Reconcile physical inventory counts with system records." />
+      <SEO title="Stock Reconciliation - FMS" description="Reconcile physical inventory counts with system records." />
       {!hasActiveCompany ? (
         <div className="text-center py-8">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

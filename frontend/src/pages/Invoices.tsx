@@ -734,7 +734,7 @@ const Invoices = () => {
 
   return (
     <AppLayout title="Sales Invoices">
-      <SEO title="Sales Invoices أ¢â‚¬â€‌ FMS" description="Create and manage sales invoices with line items, taxes, and discounts." />
+      <SEO title="Sales Invoices - FMS" description="Create and manage sales invoices with line items, taxes, and discounts." />
       {!activeCompany ? (
         <div className="text-center py-8">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -786,7 +786,7 @@ const Invoices = () => {
                           <div>
                             <h3 className="font-semibold">Invoice #{invoice.invoice_number}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {formatDisplayDate(invoice.invoice_date)} أ¢â‚¬آ¢ {invoice.status}
+                              {formatDisplayDate(invoice.invoice_date)} - {invoice.status}
                             </p>
                           </div>
                         </div>

@@ -220,7 +220,7 @@ const Customers = () => {
     const customerToDelete = customers.find(cust => cust.id === id);
     if (!customerToDelete) return;
 
-    const confirmMessage = `Are you sure you want to delete "${customerToDelete.name}" (${customerToDelete.customer_code})?\n\nThis will:\nâ€¢ Mark the customer as inactive\nâ€¢ Remove them from the customers view\nâ€¢ Preserve any historical data\n\nThis action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete "${customerToDelete.name}" (${customerToDelete.customer_code})?\n\nThis will:\n- Mark the customer as inactive\n- Remove them from the customers view\n- Preserve any historical data\n\nThis action cannot be undone.`;
 
     if (window.confirm(confirmMessage)) {
       try {
@@ -250,7 +250,7 @@ const Customers = () => {
             <div className="flex items-center justify-between">
               <CardTitle>{view === "add" ? t("customers.addNewCustomer") : t("customers.editCustomer")}</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                â†گ {t("customers.backToCustomers")}
+                {t("customers.backToCustomers")}
               </Button>
             </div>
           </CardHeader>
@@ -559,7 +559,7 @@ const Customers = () => {
                   Edit
                 </Button>
                 <Button variant="outline" onClick={backToList}>
-                  â†گ Back to Customers
+                  Back to Customers
                 </Button>
               </div>
             </div>
@@ -745,7 +745,7 @@ const Customers = () => {
 
   return (
     <AppLayout title={t("customers.title")}>
-      <SEO title={`${t("customers.title")} â€” FMS`} description="Manage customer master data and relationships." />
+      <SEO title={`${t("customers.title")} - FMS`} description="Manage customer master data and relationships." />
       
       {!activeCompany ? (
         <div className="flex items-center justify-center h-64">

@@ -164,7 +164,7 @@ const ChartOfAccounts = () => {
     const accountToDelete = accounts.find(acc => acc.id === id);
     if (!accountToDelete) return;
     
-    const confirmMessage = `Are you sure you want to delete "${accountToDelete.account_name}" (${accountToDelete.account_code})?\n\nThis will:\nâ€¢ Mark the account as inactive\nâ€¢ Remove it from the chart of accounts view\nâ€¢ Preserve any historical data\n\nThis action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete "${accountToDelete.account_name}" (${accountToDelete.account_code})?\n\nThis will:\n- Mark the account as inactive\n- Remove it from the chart of accounts view\n- Preserve any historical data\n\nThis action cannot be undone.`;
     
     if (window.confirm(confirmMessage)) {
       try {
@@ -283,7 +283,7 @@ const ChartOfAccounts = () => {
             <div className="flex items-center justify-between">
               <CardTitle>{view === "add" ? "Add New Account" : "Edit Account"}</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                â†گ Back to Accounts
+                Back to Accounts
               </Button>
             </div>
           </CardHeader>
@@ -299,7 +299,7 @@ const ChartOfAccounts = () => {
                   </p>
                   {!accounts.find(a => a.id === parentAccountId)?.is_group && (
                     <p className="text-xs text-red-600 mt-1">
-                      âڑ ï¸ڈ Warning: Parent account is not a group account and cannot have sub-accounts.
+                      Warning: Parent account is not a group account and cannot have sub-accounts.
                     </p>
                   )}
                 </div>
@@ -433,7 +433,7 @@ const ChartOfAccounts = () => {
             <div className="flex items-center justify-between">
               <CardTitle>Account Details</CardTitle>
               <Button variant="outline" onClick={backToList}>
-                â†گ Back to Accounts
+                Back to Accounts
               </Button>
             </div>
           </CardHeader>
@@ -667,7 +667,7 @@ const ChartOfAccounts = () => {
 
   return (
     <AppLayout title="Chart of Accounts">
-      <SEO title="Chart of Accounts â€” FMS" description="Manage your company's chart of accounts with proper hierarchy and account types." />
+      <SEO title="Chart of Accounts - FMS" description="Manage your company's chart of accounts with proper hierarchy and account types." />
       
 
       

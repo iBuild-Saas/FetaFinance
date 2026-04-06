@@ -234,7 +234,7 @@ export default function Categories() {
 
   return (
     <AppLayout title="Categories">
-      <SEO title="Categories â€” FMS" description="Manage item categories and classifications" />
+      <SEO title="Categories - FMS" description="Manage item categories and classifications" />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

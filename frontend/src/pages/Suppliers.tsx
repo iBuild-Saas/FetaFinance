@@ -721,7 +721,7 @@ const Suppliers = () => {
 
   return (
     <AppLayout title={t("suppliers.title")}>
-      <SEO title={`${t("suppliers.title")} â€” FMS`} description="Manage supplier master data and relationships." />
+      <SEO title={`${t("suppliers.title")} - FMS`} description="Manage supplier master data and relationships." />
       {!activeCompany ? (
         <div className="text-center py-12">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
